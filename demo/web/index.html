@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DemoBank – Online Banking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:#003A61; --blue:#0063AB; --light:#E8F3FB; --bg:#F0F2F5;
+    --white:#FFF; --text:#1A1A1A; --green:#16A34A; --amber:#D97706; --red:#DC2626;
+    --gray:#6B7280; --border:#E5E7EB;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:var(--bg)}
+  input,button,select{font-family:inherit}
+
+  /* ── LOGIN ── */
+  #p-login{
+    display:flex;align-items:center;justify-content:center;min-height:100vh;
+    background:linear-gradient(135deg,#001f35 0%,#003A61 50%,#004e82 100%);
+  }
+  .login-card{
+    background:var(--white);border-radius:16px;padding:40px;width:400px;
+    box-shadow:0 24px 64px rgba(0,0,0,.35);
+  }
+  .logo-row{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+  .logo-circle{
+    width:48px;height:48px;border-radius:50%;background:var(--navy);
+    display:flex;align-items:center;justify-content:center;
+    font-size:22px;font-weight:700;color:#fff;flex-shrink:0;
+  }
+  .logo-name{font-size:22px;font-weight:700;color:var(--navy)}
+  .login-title{font-size:24px;font-weight:700;margin-bottom:4px}
+  .login-sub{color:var(--gray);margin-bottom:28px}
+  .field{margin-bottom:16px}
+  .field label{display:block;font-size:12px;font-weight:600;color:var(--gray);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+  .field input{
+    width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;
+    font-size:14px;background:#F9FAFB;color:var(--gray);
+  }
+  .btn-primary{
+    width:100%;padding:14px;background:var(--blue);color:#fff;border:none;
+    border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;
+    transition:background .2s;margin-top:4px;
+  }
+  .btn-primary:hover{background:#004d8a}
+  .btn-guest{
+    display:block;text-align:center;margin-top:14px;color:var(--blue);
+    font-size:13px;font-weight:500;cursor:pointer;text-decoration:none;
+  }
+  .btn-guest:hover{text-decoration:underline}
+  .login-disclaimer{margin-top:20px;font-size:11px;color:#9CA3AF;text-align:center}
+
+  /* ── APP SHELL ── */
+  #p-app{display:none;height:100vh;overflow:hidden;flex-direction:row}
+  #p-app.active{display:flex}
+
+  /* SIDEBAR */
+  .sidebar{
+    width:240px;min-width:240px;background:var(--navy);display:flex;
+    flex-direction:column;height:100vh;overflow:hidden;
+  }
+  .sidebar-logo{
+    padding:24px 20px 20px;display:flex;align-items:center;gap:10px;
+    border-bottom:1px solid rgba(255,255,255,.1);
+  }
+  .sidebar-logo .logo-circle{width:36px;height:36px;font-size:16px}
+  .sidebar-logo .logo-name{color:#fff;font-size:16px}
+  .nav-list{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:2px}
+  .nav-item{
+    display:flex;align-items:center;gap:12px;padding:10px 14px;
+    border-radius:8px;color:rgba(255,255,255,.75);cursor:pointer;
+    transition:all .15s;font-size:14px;font-weight:500;
+    white-space:nowrap;
+  }
+  .nav-item:hover{background:rgba(255,255,255,.1);color:#fff}
+  .nav-item.active{background:var(--blue);color:#fff}
+  .nav-icon{font-size:16px;width:20px;text-align:center}
+  .sidebar-user{
+    padding:16px 18px;border-top:1px solid rgba(255,255,255,.1);
+    display:flex;align-items:center;gap:10px;
+  }
+  .user-avatar{
+    width:36px;height:36px;border-radius:50%;background:var(--blue);
+    display:flex;align-items:center;justify-content:center;font-size:13px;
+    font-weight:700;color:#fff;flex-shrink:0;
+  }
+  .user-info{flex:1;overflow:hidden}
+  .user-name{color:#fff;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .user-badge{
+    display:inline-block;background:var(--amber);color:#fff;
+    font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;
+    text-transform:uppercase;letter-spacing:.5px;margin-top:1px;
+  }
+  .logout-btn{background:none;border:none;cursor:pointer;color:rgba(255,255,255,.5);font-size:16px;padding:4px;transition:color .15s}
+  .logout-btn:hover{color:#fff}
+
+  /* MAIN AREA */
+  .main-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden}
+  .main-content{flex:1;overflow-y:auto;padding:28px 32px 180px}
+
+  /* SECTIONS */
+  .section{display:none}
+  .section.active{display:block}
+  .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+  .page-title{font-size:22px;font-weight:700}
+  .page-date{font-size:13px;color:var(--gray)}
+
+  /* STATS ROW */
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+  .stat-card{
+    background:var(--white);border-radius:12px;padding:20px;
+    border:1px solid var(--border);
+  }
+  .stat-label{font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+  .stat-value{font-size:22px;font-weight:700;color:var(--navy)}
+  .stat-sub{font-size:11px;color:var(--gray);margin-top:4px}
+  .stat-badge{
+    display:inline-flex;align-items:center;gap:3px;font-size:11px;
+    font-weight:600;padding:2px 7px;border-radius:20px;margin-top:6px;
+  }
+  .badge-green{background:#DCFCE7;color:#15803D}
+  .badge-amber{background:#FEF3C7;color:#92400E}
+
+  /* NBA ZONE */
+  #nba-zone{
+    background:var(--navy);border-radius:14px;padding:24px;margin-bottom:28px;
+    min-height:100px;display:flex;align-items:center;
+  }
+  .nba-loading{display:flex;align-items:center;gap:14px;color:rgba(255,255,255,.8);font-size:14px}
+  .spinner{
+    width:24px;height:24px;border:3px solid rgba(255,255,255,.3);
+    border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .nba-card{width:100%}
+  .nba-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:12px}
+  .nba-title{font-size:18px;font-weight:700;color:#fff}
+  .nba-match-pill{
+    background:rgba(255,255,255,.15);color:#fff;font-size:11px;font-weight:700;
+    padding:4px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0;
+  }
+  .nba-desc{color:rgba(255,255,255,.8);font-size:13px;margin-bottom:16px;line-height:1.5}
+  .nba-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .btn-accept{
+    background:var(--green);color:#fff;border:none;border-radius:7px;
+    padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s;
+  }
+  .btn-accept:hover{opacity:.85}
+  .btn-decline{
+    background:transparent;color:rgba(255,255,255,.7);border:1.5px solid rgba(255,255,255,.3);
+    border-radius:7px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;
+  }
+  .btn-decline:hover{border-color:rgba(255,255,255,.7);color:#fff}
+  .nba-powered{font-size:10px;color:rgba(255,255,255,.4);margin-left:auto}
+
+  /* REFRESH OFFERS BTN */
+  .btn-refresh{
+    background:var(--light);color:var(--blue);border:1.5px solid var(--blue);
+    border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;
+    cursor:pointer;transition:all .15s;margin-bottom:28px;
+  }
+  .btn-refresh:hover{background:var(--blue);color:#fff}
+
+  /* PRODUCTS */
+  .section-heading{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy)}
+  .products-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
+  .product-card{
+    background:var(--white);border-radius:12px;border:1px solid var(--border);
+    overflow:hidden;transition:box-shadow .2s;cursor:pointer;
+  }
+  .product-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.1)}
+  .product-top{height:4px}
+  .product-body{padding:18px}
+  .product-icon{font-size:24px;margin-bottom:10px}
+  .product-name{font-size:15px;font-weight:700;margin-bottom:4px;color:var(--navy)}
+  .product-tagline{font-size:12px;color:var(--gray);margin-bottom:10px}
+  .product-metric{font-size:18px;font-weight:700;color:var(--text);margin-bottom:14px}
+  .btn-learn{
+    background:var(--light);color:var(--blue);border:none;
+    border-radius:6px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;
+  }
+  .btn-learn:hover{background:var(--blue);color:#fff}
+
+  /* TRANSACTIONS */
+  .txn-table{width:100%;border-collapse:collapse;background:var(--white);border-radius:12px;overflow:hidden;border:1px solid var(--border)}
+  .txn-table th{
+    background:#F9FAFB;padding:10px 14px;text-align:left;
+    font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;
+    border-bottom:1px solid var(--border);
+  }
+  .txn-table td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px}
+  .txn-table tr:last-child td{border-bottom:none}
+  .txn-amount.debit{color:var(--red);font-weight:600}
+  .txn-amount.credit{color:var(--green);font-weight:600}
+  .cat-badge{
+    display:inline-block;padding:2px 8px;border-radius:20px;
+    font-size:10px;font-weight:600;
+  }
+  .cat-food{background:#FEF3C7;color:#92400E}
+  .cat-transport{background:#E0F2FE;color:#0369A1}
+  .cat-shopping{background:#EDE9FE;color:#6D28D9}
+  .cat-bills{background:#FCE7F3;color:#9D174D}
+  .cat-income{background:#DCFCE7;color:#15803D}
+
+  /* PREFERENCES */
+  .pref-card{background:var(--white);border-radius:12px;border:1px solid var(--border);padding:24px;max-width:560px}
+  .pref-row{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 0;border-bottom:1px solid var(--border);
+  }
+  .pref-row:last-of-type{border-bottom:none}
+  .pref-label{font-size:14px;font-weight:500}
+  .pref-sub{font-size:11px;color:var(--gray);margin-top:2px}
+  /* Toggle switch */
+  .toggle-wrap{position:relative;display:inline-flex;align-items:center}
+  .toggle-inp{opacity:0;width:0;height:0;position:absolute}
+  .toggle-track{
+    width:40px;height:22px;background:#D1D5DB;border-radius:11px;
+    cursor:pointer;transition:background .2s;display:block;position:relative;
+  }
+  .toggle-inp:checked + .toggle-track{background:var(--blue)}
+  .toggle-thumb{
+    position:absolute;top:3px;left:3px;width:16px;height:16px;
+    background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);
+  }
+  .toggle-inp:checked ~ .toggle-thumb{transform:translateX(18px)}
+  .toggle-inp:disabled + .toggle-track{opacity:.5;cursor:not-allowed}
+  .btn-save{
+    background:var(--blue);color:#fff;border:none;border-radius:8px;
+    padding:11px 24px;font-size:14px;font-weight:600;cursor:pointer;
+    margin-top:20px;transition:background .2s;
+  }
+  .btn-save:hover{background:#004d8a}
+  #consent-status{
+    margin-top:14px;font-size:13px;padding:10px 14px;border-radius:8px;
+    background:#F0FDF4;color:var(--green);display:none;font-weight:500;
+  }
+
+  /* EVENT LOG PANEL */
+  .log-strip{
+    position:fixed;bottom:0;left:0;right:0;z-index:100;
+    background:#1E293B;transition:height .25s ease;
+  }
+  .log-tab{
+    height:36px;display:flex;align-items:center;justify-content:space-between;
+    padding:0 16px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.1);
+  }
+  .log-tab-label{color:rgba(255,255,255,.85);font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .log-count{
+    background:var(--blue);color:#fff;font-size:10px;font-weight:700;
+    padding:1px 6px;border-radius:10px;
+  }
+  .log-actions{display:flex;align-items:center;gap:8px}
+  .log-clear-btn{
+    background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);
+    border:none;border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer;
+    transition:background .15s;
+  }
+  .log-clear-btn:hover{background:rgba(255,255,255,.2)}
+  .log-body{
+    height:164px;overflow-y:auto;padding:8px 12px;
+    scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.2) transparent;
+  }
+  .log-body::-webkit-scrollbar{width:4px}
+  .log-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:2px}
+  .log-line{
+    font-family:'Courier New',monospace;font-size:11.5px;line-height:1.6;
+    color:rgba(255,255,255,.75);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .log-ok{color:#4ADE80}
+  .log-warn{color:#FCD34D}
+  .log-err{color:#F87171}
+  .log-empty{color:rgba(255,255,255,.3);font-style:italic;font-size:11px}
+
+  /* SCENARIO PANEL */
+  .scenario-toggle{
+    position:fixed;top:16px;right:16px;z-index:200;
+    background:var(--navy);color:#fff;border:none;border-radius:20px;
+    padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;
+    box-shadow:0 4px 12px rgba(0,0,0,.3);transition:background .15s;
+  }
+  .scenario-toggle:hover{background:var(--blue)}
+  .scenario-panel{
+    position:fixed;top:0;right:-320px;width:300px;height:100vh;
+    background:var(--white);box-shadow:-4px 0 24px rgba(0,0,0,.15);
+    z-index:201;transition:right .3s ease;display:flex;flex-direction:column;
+    overflow:hidden;
+  }
+  .scenario-panel.open{right:0}
+  .scenario-header{
+    padding:16px;border-bottom:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--navy);color:#fff;
+  }
+  .scenario-title{font-size:14px;font-weight:700}
+  .scenario-close{background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:18px;line-height:1}
+  .scenario-body{flex:1;overflow-y:auto;padding:12px}
+  .sc-btn{
+    width:100%;text-align:left;background:var(--white);
+    border:1.5px solid var(--border);border-radius:8px;
+    padding:10px 12px;font-size:12px;font-weight:600;cursor:pointer;
+    margin-bottom:8px;transition:all .15s;color:var(--navy);
+  }
+  .sc-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--light)}
+  .sc-btn.running{border-color:var(--blue);background:var(--light);color:var(--blue)}
+  .sc-steps{font-size:10px;font-weight:400;color:var(--gray);display:block;margin-top:2px}
+  .sc-progress{
+    height:4px;background:var(--border);border-radius:2px;margin-bottom:10px;
+    overflow:hidden;display:none;
+  }
+  .sc-progress-bar{height:100%;background:var(--blue);border-radius:2px;transition:width .3s}
+  .sc-log-box{
+    background:#1E293B;border-radius:8px;height:140px;overflow-y:auto;
+    padding:8px 10px;margin-top:4px;margin-bottom:8px;
+    scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.2) transparent;
+  }
+  .sc-log-box::-webkit-scrollbar{width:3px}
+  .sc-log-box::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:2px}
+  .sc-log-line{font-size:11px;font-family:monospace;color:rgba(255,255,255,.75);line-height:1.6}
+  .btn-stop{
+    width:100%;background:#FEE2E2;color:var(--red);border:none;
+    border-radius:6px;padding:8px;font-size:12px;font-weight:600;cursor:pointer;
+    display:none;transition:background .15s;
+  }
+  .btn-stop:hover{background:#FCA5A5}
+
+  /* TOAST */
+  .toast-container{position:fixed;top:20px;right:340px;z-index:300;display:flex;flex-direction:column;gap:8px}
+  .toast{
+    background:var(--white);border-radius:10px;padding:12px 16px;
+    box-shadow:0 8px 24px rgba(0,0,0,.15);font-size:13px;font-weight:500;
+    display:flex;align-items:center;gap:8px;max-width:280px;
+    animation:slideIn .25s ease;border-left:4px solid var(--green);
+  }
+  .toast.amber{border-color:var(--amber)}
+  .toast.red{border-color:var(--red)}
+  @keyframes slideIn{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
+  @keyframes slideOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(40px)}}
+  .toast.out{animation:slideOut .25s ease forwards}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ LOGIN PAGE ═══════════════════════ -->
+<div id="p-login">
+  <div class="login-card">
+    <div class="logo-row">
+      <div class="logo-circle">D</div>
+      <span class="logo-name">DemoBank</span>
+    </div>
+    <div class="login-title">Welcome back</div>
+    <div class="login-sub">Sign in to your account</div>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" value="alice.smith@demobank.com" disabled>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" value="demopass" disabled>
+    </div>
+    <button class="btn-primary" onclick="signIn()">Sign In</button>
+    <a class="btn-guest" onclick="guestBrowse()">Browse as Guest</a>
+    <div class="login-disclaimer">Demo credentials pre-filled for demonstration</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ APP SHELL ═══════════════════════ -->
+<div id="p-app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-circle">D</div>
+      <span class="logo-name">DemoBank</span>
+    </div>
+    <nav class="nav-list">
+      <div class="nav-item active" id="nav-dashboard" onclick="navTo('dashboard')">
+        <span class="nav-icon">🏠</span> Dashboard
+      </div>
+      <div class="nav-item" id="nav-payments" onclick="navTo('payments')">
+        <span class="nav-icon">💸</span> Payments
+      </div>
+      <div class="nav-item" id="nav-accounts" onclick="navTo('accounts')">
+        <span class="nav-icon">📊</span> Accounts
+      </div>
+      <div class="nav-item" id="nav-cards" onclick="navTo('cards')">
+        <span class="nav-icon">🛡️</span> Cards
+      </div>
+      <div class="nav-item" id="nav-investments" onclick="navTo('investments')">
+        <span class="nav-icon">📈</span> Investments
+      </div>
+      <div class="nav-item" id="nav-settings" onclick="navTo('preferences')">
+        <span class="nav-icon">⚙️</span> Settings
+      </div>
+    </nav>
+    <div class="sidebar-user">
+      <div class="user-avatar">AS</div>
+      <div class="user-info">
+        <div class="user-name" id="sidebar-username">Alice Smith</div>
+        <div class="user-badge">Premium</div>
+      </div>
+      <button class="logout-btn" title="Sign out" onclick="signOut()">↩</button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-wrap">
+    <div class="main-content">
+
+      <!-- DASHBOARD -->
+      <section class="section active" id="sec-dashboard">
+        <div class="page-header">
+          <div class="page-title" id="greeting-text">Good morning, Alice 👋</div>
+          <div class="page-date" id="date-text"></div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-label">Total Balance</div>
+            <div class="stat-value">$84,500.00</div>
+            <span class="stat-badge badge-green">↑ 2.3% this month</span>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Available Credit</div>
+            <div class="stat-value">$12,000</div>
+            <div class="stat-sub">Rewards Card</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Points</div>
+            <div class="stat-value">24,500</div>
+            <div class="stat-sub">Qantas Frequent Flyer</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Upcoming Payment</div>
+            <div class="stat-value">$1,240</div>
+            <span class="stat-badge badge-amber">Due in 5 days</span>
+          </div>
+        </div>
+
+        <!-- NBA Zone -->
+        <div id="nba-zone">
+          <div class="nba-loading">
+            <div class="spinner"></div>
+            <span>🎯 Loading your personalised offers...</span>
+          </div>
+        </div>
+
+        <!-- Refresh offers -->
+        <button class="btn-refresh" onclick="triggerNBA()">🎯 Refresh My Offers</button>
+
+        <!-- Products -->
+        <div class="section-heading">Recommended Products</div>
+        <div class="products-grid">
+          <div class="product-card" onclick="navigateToProduct('home-loan')">
+            <div class="product-top" style="background:var(--blue)"></div>
+            <div class="product-body">
+              <div class="product-icon">🏠</div>
+              <div class="product-name">Home Loan</div>
+              <div class="product-tagline">Flexible repayments, offset account included</div>
+              <div class="product-metric">From 4.2% p.a.</div>
+              <button class="btn-learn">Learn More</button>
+            </div>
+          </div>
+          <div class="product-card" onclick="navigateToProduct('rewards-card')">
+            <div class="product-top" style="background:var(--navy)"></div>
+            <div class="product-body">
+              <div class="product-icon">💳</div>
+              <div class="product-name">Rewards Card</div>
+              <div class="product-tagline">Earn points on every purchase you make</div>
+              <div class="product-metric">3× points everyday</div>
+              <button class="btn-learn">Learn More</button>
+            </div>
+          </div>
+          <div class="product-card" onclick="navigateToProduct('term-deposit')">
+            <div class="product-top" style="background:var(--green)"></div>
+            <div class="product-body">
+              <div class="product-icon">📈</div>
+              <div class="product-name">Term Deposit</div>
+              <div class="product-tagline">Lock in a great rate, guaranteed returns</div>
+              <div class="product-metric">5.1% p.a. (12 months)</div>
+              <button class="btn-learn">Learn More</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Transactions -->
+        <div class="section-heading">Recent Transactions</div>
+        <table class="txn-table">
+          <thead>
+            <tr>
+              <th>Date</th><th>Merchant</th><th>Category</th><th style="text-align:right">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>04 Jun</td><td>Woolworths Metro</td><td><span class="cat-badge cat-food">Food &amp; Dining</span></td><td class="txn-amount debit" style="text-align:right">-$67.40</td></tr>
+            <tr><td>03 Jun</td><td>Opal Card Top-up</td><td><span class="cat-badge cat-transport">Transport</span></td><td class="txn-amount debit" style="text-align:right">-$50.00</td></tr>
+            <tr><td>03 Jun</td><td>Salary – Acme Corp</td><td><span class="cat-badge cat-income">Income</span></td><td class="txn-amount credit" style="text-align:right">+$4,850.00</td></tr>
+            <tr><td>02 Jun</td><td>Amazon AU</td><td><span class="cat-badge cat-shopping">Shopping</span></td><td class="txn-amount debit" style="text-align:right">-$129.95</td></tr>
+            <tr><td>01 Jun</td><td>AGL Energy</td><td><span class="cat-badge cat-bills">Bills</span></td><td class="txn-amount debit" style="text-align:right">-$184.20</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- PREFERENCES -->
+      <section class="section" id="sec-preferences">
+        <div class="page-header">
+          <div class="page-title">Privacy &amp; Communication</div>
+        </div>
+        <div class="pref-card">
+          <div class="pref-row">
+            <div>
+              <div class="pref-label">Email newsletters and product updates</div>
+              <div class="pref-sub">Receive curated offers and account news</div>
+            </div>
+            <div class="toggle-wrap">
+              <input type="checkbox" class="toggle-inp" id="t-email" checked>
+              <label class="toggle-track" for="t-email"></label>
+              <span class="toggle-thumb" id="thumb-t-email"></span>
+            </div>
+          </div>
+          <div class="pref-row">
+            <div>
+              <div class="pref-label">SMS transaction alerts</div>
+              <div class="pref-sub">Instant alerts for every transaction</div>
+            </div>
+            <div class="toggle-wrap">
+              <input type="checkbox" class="toggle-inp" id="t-sms" checked>
+              <label class="toggle-track" for="t-sms"></label>
+              <span class="toggle-thumb" id="thumb-t-sms"></span>
+            </div>
+          </div>
+          <div class="pref-row">
+            <div>
+              <div class="pref-label">Push notifications</div>
+              <div class="pref-sub">In-app and mobile push alerts</div>
+            </div>
+            <div class="toggle-wrap">
+              <input type="checkbox" class="toggle-inp" id="t-push" checked>
+              <label class="toggle-track" for="t-push"></label>
+              <span class="toggle-thumb" id="thumb-t-push"></span>
+            </div>
+          </div>
+          <div class="pref-row">
+            <div>
+              <div class="pref-label">Marketing communications</div>
+              <div class="pref-sub">Personalised offers from DemoBank</div>
+            </div>
+            <div class="toggle-wrap">
+              <input type="checkbox" class="toggle-inp" id="t-marketing" checked>
+              <label class="toggle-track" for="t-marketing"></label>
+              <span class="toggle-thumb" id="thumb-t-marketing"></span>
+            </div>
+          </div>
+          <div class="pref-row">
+            <div>
+              <div class="pref-label">Data sharing with partners</div>
+              <div class="pref-sub">Share anonymised data with DemoBank partners</div>
+            </div>
+            <div class="toggle-wrap">
+              <input type="checkbox" class="toggle-inp" id="t-data">
+              <label class="toggle-track" for="t-data"></label>
+              <span class="toggle-thumb" id="thumb-t-data"></span>
+            </div>
+          </div>
+          <button class="btn-save" onclick="savePreferences()">Save Preferences</button>
+          <div id="consent-status"></div>
+        </div>
+      </section>
+
+      <!-- PAYMENTS (stub) -->
+      <section class="section" id="sec-payments">
+        <div class="page-header"><div class="page-title">Payments</div></div>
+        <div style="background:var(--white);border-radius:12px;border:1px solid var(--border);padding:48px;text-align:center;color:var(--gray)">
+          <div style="font-size:32px;margin-bottom:8px">💸</div>
+          <div style="font-size:15px;font-weight:600">Payments module</div>
+          <div style="font-size:13px;margin-top:4px">Available in production build</div>
+        </div>
+      </section>
+
+      <!-- ACCOUNTS (stub) -->
+      <section class="section" id="sec-accounts">
+        <div class="page-header"><div class="page-title">Accounts</div></div>
+        <div style="background:var(--white);border-radius:12px;border:1px solid var(--border);padding:48px;text-align:center;color:var(--gray)">
+          <div style="font-size:32px;margin-bottom:8px">📊</div>
+          <div style="font-size:15px;font-weight:600">Accounts overview</div>
+          <div style="font-size:13px;margin-top:4px">Available in production build</div>
+        </div>
+      </section>
+
+      <!-- CARDS (stub) -->
+      <section class="section" id="sec-cards">
+        <div class="page-header"><div class="page-title">Cards</div></div>
+        <div style="background:var(--white);border-radius:12px;border:1px solid var(--border);padding:48px;text-align:center;color:var(--gray)">
+          <div style="font-size:32px;margin-bottom:8px">🛡️</div>
+          <div style="font-size:15px;font-weight:600">Card management</div>
+          <div style="font-size:13px;margin-top:4px">Available in production build</div>
+        </div>
+      </section>
+
+      <!-- INVESTMENTS (stub) -->
+      <section class="section" id="sec-investments">
+        <div class="page-header"><div class="page-title">Investments</div></div>
+        <div style="background:var(--white);border-radius:12px;border:1px solid var(--border);padding:48px;text-align:center;color:var(--gray)">
+          <div style="font-size:32px;margin-bottom:8px">📈</div>
+          <div style="font-size:15px;font-weight:600">Investment portfolio</div>
+          <div style="font-size:13px;margin-top:4px">Available in production build</div>
+        </div>
+      </section>
+
+    </div><!-- /main-content -->
+
+    <!-- EVENT LOG PANEL -->
+    <div class="log-strip" id="log-strip" style="height:36px">
+      <div class="log-tab" onclick="toggleLog()">
+        <span class="log-tab-label">
+          📡 NexusCDP Events
+          <span class="log-count" id="log-count">0</span>
+        </span>
+        <div class="log-actions">
+          <button class="log-clear-btn" onclick="clearLog(event)">Clear</button>
+          <span style="color:rgba(255,255,255,.5);font-size:12px" id="log-chevron">▲</span>
+        </div>
+      </div>
+      <div class="log-body" id="log-body">
+        <div class="log-empty log-line">No events yet — interact with the app to see SDK events</div>
+      </div>
+    </div>
+
+  </div><!-- /main-wrap -->
+</div><!-- /p-app -->
+
+<!-- SCENARIO PANEL TOGGLE -->
+<button class="scenario-toggle" id="sc-toggle" onclick="toggleScenarioPanel()" style="display:none">⚡ Scenarios</button>
+
+<!-- SCENARIO PANEL -->
+<div class="scenario-panel" id="scenario-panel">
+  <div class="scenario-header">
+    <div class="scenario-title">⚡ Demo Scenarios</div>
+    <button class="scenario-close" onclick="toggleScenarioPanel()">✕</button>
+  </div>
+  <div class="scenario-body">
+    <div style="font-size:11px;color:var(--gray);margin-bottom:10px">Run guided scenarios to see NexusCDP SDK events in real-time.</div>
+
+    <div class="sc-progress" id="sc-progress">
+      <div class="sc-progress-bar" id="sc-progress-bar" style="width:0%"></div>
+    </div>
+
+    <button class="sc-btn" id="sc-btn-1" onclick="runScenario(1)">
+      ▶ 1. Anonymous Browse
+      <span class="sc-steps">4 steps · page views without auth</span>
+    </button>
+    <button class="sc-btn" id="sc-btn-2" onclick="runScenario(2)">
+      ▶ 2. Login &amp; Identity Stitch
+      <span class="sc-steps">5 steps · pre-login events merged</span>
+    </button>
+    <button class="sc-btn" id="sc-btn-3" onclick="runScenario(3)">
+      ▶ 3. NBA Decision Flow
+      <span class="sc-steps">4 steps · Pega CDH offers</span>
+    </button>
+    <button class="sc-btn" id="sc-btn-4" onclick="runScenario(4)">
+      ▶ 4. Product Browse Journey
+      <span class="sc-steps">5 steps · multi-product tracking</span>
+    </button>
+    <button class="sc-btn" id="sc-btn-5" onclick="runScenario(5)">
+      ▶ 5. Consent Opt-out
+      <span class="sc-steps">3 steps · suppress in 12 systems</span>
+    </button>
+    <button class="sc-btn" id="sc-btn-6" onclick="runScenario(6)">
+      ▶ 6. Full Journey Automation
+      <span class="sc-steps">12 steps · end-to-end demo</span>
+    </button>
+
+    <div class="sc-log-box" id="sc-log-box">
+      <div style="font-size:11px;color:rgba(255,255,255,.3);font-style:italic">Select a scenario to begin...</div>
+    </div>
+
+    <button class="btn-stop" id="btn-stop" onclick="stopScenario()">⏹ Stop Scenario</button>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- NEXUS SDK -->
+<script src="../sdk/nexus.js"></script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   CONFIG & STATE
+═══════════════════════════════════════════════════════════ */
+var SDK_CONFIG = {
+  collectorUrl: 'http://localhost:3001',
+  profileUrl:   'http://localhost:3002',
+  cdhUrl:       'http://localhost:3010',
+  feedbackUrl:  'http://localhost:3003',
+  consentUrl:   'http://localhost:3004'
+};
+
+var appState = {
+  currentNBA:      null,
+  isGuest:         false,
+  scenarioRunning: false,
+  scenarioStop:    false,
+  eventCount:      0,
+  logOpen:         false
+};
+
+/* ═══════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function () {
+  // Set date
+  var now = new Date();
+  var hours = now.getHours();
+  var greeting = hours < 12 ? 'Good morning' : hours < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('greeting-text').textContent = greeting + ', Alice 👋';
+  document.getElementById('date-text').textContent = now.toLocaleDateString('en-AU', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+
+  // Init SDK
+  if (typeof NexusCDP !== 'undefined') {
+    NexusCDP.init(Object.assign({}, SDK_CONFIG, { debug: true, autoTrack: false }));
+    bindSDKEvents();
+  } else {
+    // Fallback stub if SDK not loaded
+    console.warn('[DemoBank] NexusCDP SDK not found — using stub');
+    window.NexusCDP = createStub();
+    bindSDKEvents();
+  }
+
+  // Fix toggle thumbs (CSS-only approach needs JS nudge for checked state)
+  syncToggleThumbs();
+  document.querySelectorAll('.toggle-inp').forEach(function(inp) {
+    inp.addEventListener('change', function() {
+      syncToggleThumbs();
+    });
+  });
+});
+
+function syncToggleThumbs() {
+  document.querySelectorAll('.toggle-inp').forEach(function(inp) {
+    var thumb = document.getElementById('thumb-' + inp.id);
+    if (thumb) thumb.style.transform = inp.checked ? 'translateX(18px)' : '';
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SDK STUB (graceful fallback when SDK file unavailable)
+═══════════════════════════════════════════════════════════ */
+function createStub() {
+  var listeners = {};
+  var anonId = 'ANON-' + Math.random().toString(36).substr(2,8).toUpperCase();
+  var customerId = null;
+
+  function emit(event, data) {
+    (listeners[event] || []).forEach(function(fn) { fn(data); });
+  }
+
+  function fakeCollect(payload) {
+    var ihTypes = {
+      page_view:     'WEB_BROWSE',
+      product_view:  'PRODUCT_INTEREST',
+      offer_accept:  'OFFER_ACCEPT',
+      offer_reject:  'OFFER_DECLINE',
+      sign_in:       'AUTHENTICATION',
+      sign_out:      'SIGN_OUT'
+    };
+    var offset = Math.floor(Math.random() * 99000) + 1000;
+    setTimeout(function() {
+      emit('event:accepted', {
+        payload: payload,
+        response: {
+          ihEventType: ihTypes[payload.eventType] || 'GENERIC_EVENT',
+          kafka: { offset: offset, partition: Math.floor(Math.random()*3), topic:'cdh-events' },
+          timestamp: new Date().toISOString()
+        }
+      });
+    }, 80 + Math.random() * 120);
+    return Promise.resolve({success:true, offset:offset});
+  }
+
+  return {
+    init: function(cfg) {
+      console.log('[NexusCDP-stub] init', cfg);
+      setTimeout(function(){ emit('ready', {anonymousId: anonId}); }, 100);
+    },
+    identify: function(id, traits) {
+      var wasAnon = !customerId;
+      customerId = id;
+      console.log('[NexusCDP-stub] identify', id, traits);
+      var promise = fakeCollect({eventType:'identify', customerId:id, traits:traits});
+      if (wasAnon) {
+        setTimeout(function(){
+          emit('stitch:complete', {anonymousId: anonId, customerId: id, mergedEvents: Math.floor(Math.random()*5)+2});
+        }, 300);
+      }
+      return promise;
+    },
+    track: function(eventType, props) {
+      var payload = Object.assign({eventType: eventType}, props || {});
+      console.log('[NexusCDP-stub] track', payload);
+      return fakeCollect(payload);
+    },
+    getNBA: function(callback) {
+      console.log('[NexusCDP-stub] getNBA');
+      var mockDecisions = [
+        {
+          id: 'NBA-HOME-2024',
+          title: 'Pre-Approved Home Loan Offer',
+          description: 'Based on your savings pattern, you may qualify for a $650,000 home loan at 4.19% p.a. fixed for 2 years with no application fee.',
+          propensity: 0.87,
+          action: 'APPLY_HOME_LOAN',
+          channel: 'web',
+          group: 'Lending',
+          issue: 'Grow',
+          variant: 'A'
+        },
+        {
+          id: 'NBA-TD-2024',
+          title: '12-Month Term Deposit',
+          description: 'Lock in 5.1% p.a. on your idle savings. Open with as little as $1,000.',
+          propensity: 0.74,
+          action: 'OPEN_TERM_DEPOSIT',
+          channel: 'web',
+          group: 'Savings',
+          issue: 'Retain',
+          variant: 'B'
+        }
+      ];
+      setTimeout(function() {
+        emit('nba:received', mockDecisions);
+        if (typeof callback === 'function') callback(null, mockDecisions);
+      }, 900 + Math.random() * 400);
+      return Promise.resolve(mockDecisions);
+    },
+    feedback: function(decisionId, outcome, props) {
+      console.log('[NexusCDP-stub] feedback', decisionId, outcome, props);
+      return fakeCollect({eventType:'feedback', decisionId:decisionId, outcome:outcome});
+    },
+    optOut: function(channels) {
+      console.log('[NexusCDP-stub] optOut', channels);
+      var promise = fakeCollect({eventType:'consent_optout', channels:channels});
+      setTimeout(function(){ emit('consent:optout', {channels:channels}); }, 200);
+      return promise;
+    },
+    reset: function() {
+      customerId = null;
+      console.log('[NexusCDP-stub] reset — anonymous session started');
+    },
+    on: function(event, fn) {
+      if (!listeners[event]) listeners[event] = [];
+      listeners[event].push(fn);
+    },
+    off: function(event, fn) {
+      if (!listeners[event]) return;
+      listeners[event] = listeners[event].filter(function(f){ return f !== fn; });
+    }
+  };
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SDK EVENT BINDINGS
+═══════════════════════════════════════════════════════════ */
+function bindSDKEvents() {
+  NexusCDP.on('event:accepted', function(d) {
+    var ihType = (d.response && d.response.ihEventType) || '—';
+    var offset = (d.response && d.response.kafka && d.response.kafka.offset) || '—';
+    addLog(d.payload.eventType, ihType, '✅ Kafka:' + offset, 'ok');
+  });
+
+  NexusCDP.on('event:error', function(d) {
+    addLog(d.payload && d.payload.eventType || 'UNKNOWN', 'ERROR', '❌ ' + (d.error || 'Unknown error'), 'err');
+  });
+
+  NexusCDP.on('stitch:complete', function(d) {
+    addLog('STITCH', 'IDENTITY_STITCHED', '✅ anonymous→known (' + (d.mergedEvents||'?') + ' events merged)', 'ok');
+    showToast('Identity stitched — pre-login events merged', 'green');
+  });
+
+  NexusCDP.on('nba:received', function(d) {
+    var count = Array.isArray(d) ? d.length : 0;
+    addLog('NBA', 'CDH.Decisions', '✅ ' + count + ' offer(s) received', 'ok');
+  });
+
+  NexusCDP.on('consent:optout', function(d) {
+    var chs = Array.isArray(d.channels) ? d.channels.join(',') : d.channels;
+    addLog('CONSENT', 'CDH.Suppress', '✅ propagated [' + chs + ']', 'ok');
+  });
+
+  NexusCDP.on('ready', function(d) {
+    addLog('SDK_READY', 'INIT', '✅ anonymousId:' + (d && d.anonymousId || '—'), 'ok');
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PAGE NAVIGATION
+═══════════════════════════════════════════════════════════ */
+function showPage(page) {
+  document.getElementById('p-login').style.display = 'none';
+  var appEl = document.getElementById('p-app');
+  appEl.style.display = 'none';
+  appEl.classList.remove('active');
+
+  if (page === 'login') {
+    document.getElementById('p-login').style.display = 'flex';
+    document.getElementById('sc-toggle').style.display = 'none';
+  } else {
+    appEl.style.display = 'flex';
+    appEl.classList.add('active');
+    document.getElementById('sc-toggle').style.display = 'block';
+  }
+}
+
+var sectionMap = {
+  dashboard:   'sec-dashboard',
+  preferences: 'sec-preferences',
+  payments:    'sec-payments',
+  accounts:    'sec-accounts',
+  cards:       'sec-cards',
+  investments: 'sec-investments'
+};
+
+var navMap = {
+  dashboard:   'nav-dashboard',
+  preferences: 'nav-settings',
+  payments:    'nav-payments',
+  accounts:    'nav-accounts',
+  cards:       'nav-cards',
+  investments: 'nav-investments'
+};
+
+function navTo(section) {
+  // Hide all sections
+  Object.keys(sectionMap).forEach(function(k) {
+    var el = document.getElementById(sectionMap[k]);
+    if (el) { el.classList.remove('active'); }
+  });
+  // Remove all nav active states
+  document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
+  // Show target
+  var sec = document.getElementById(sectionMap[section]);
+  if (sec) sec.classList.add('active');
+  var nav = document.getElementById(navMap[section]);
+  if (nav) nav.classList.add('active');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   AUTH FLOWS
+═══════════════════════════════════════════════════════════ */
+function signIn() {
+  showPage('app');
+  navTo('dashboard');
+  resetNBAZone();
+
+  NexusCDP.identify('CUST-ALICE-001', {
+    name:   'Alice Smith',
+    email:  'alice.smith@demobank.com',
+    tier:   'premium',
+    segment: 'high-value'
+  });
+
+  NexusCDP.track('sign_in', {
+    page:          'login',
+    authenticated: true,
+    method:        'password'
+  });
+
+  showToast('Signed in successfully ✓', 'green');
+
+  setTimeout(function() {
+    getNBA();
+  }, 2000);
+}
+
+function guestBrowse() {
+  appState.isGuest = true;
+  showPage('app');
+  navTo('dashboard');
+  resetNBAZone(true);
+
+  NexusCDP.track('page_view', {
+    page:          'dashboard',
+    authenticated: false,
+    channel:       'web'
+  });
+
+  showToast('Browsing as guest', 'amber');
+}
+
+function signOut() {
+  NexusCDP.reset();
+  NexusCDP.track('sign_out', { page: 'app' });
+  appState.isGuest = false;
+  appState.currentNBA = null;
+  showPage('login');
+  showToast('Signed out', 'amber');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NBA
+═══════════════════════════════════════════════════════════ */
+function resetNBAZone(loading) {
+  var zone = document.getElementById('nba-zone');
+  if (loading === false) {
+    zone.innerHTML = '<div class="nba-loading" style="color:rgba(255,255,255,.6)"><span>Sign in to see personalised offers</span></div>';
+  } else {
+    zone.innerHTML = '<div class="nba-loading"><div class="spinner"></div><span>🎯 Loading your personalised offers...</span></div>';
+  }
+}
+
+function getNBA() {
+  resetNBAZone();
+  NexusCDP.getNBA(showNBABanner);
+}
+
+function triggerNBA() {
+  NexusCDP.track('page_view', { page: 'dashboard', trigger: 'manual_refresh' });
+  getNBA();
+  showToast('Fetching personalised offers from Pega CDH...', 'amber');
+}
+
+function showNBABanner(err, decisions) {
+  var zone = document.getElementById('nba-zone');
+  if (err || !decisions || decisions.length === 0) {
+    zone.innerHTML = '<div class="nba-loading" style="color:rgba(255,255,255,.6)"><span>⚠️ No offers available right now</span></div>';
+    return;
+  }
+  var d = decisions[0];
+  appState.currentNBA = d;
+  var pct = Math.round((d.propensity || 0.87) * 100);
+
+  zone.innerHTML =
+    '<div class="nba-card">' +
+      '<div class="nba-header">' +
+        '<div class="nba-title">' + escHtml(d.title) + '</div>' +
+        '<div class="nba-match-pill">Match: ' + pct + '%</div>' +
+      '</div>' +
+      '<div class="nba-desc">' + escHtml(d.description) + '</div>' +
+      '<div class="nba-actions">' +
+        '<button class="btn-accept" onclick="acceptOffer()">✅ Accept Offer</button>' +
+        '<button class="btn-decline" onclick="declineOffer()">❌ Not Interested</button>' +
+        '<span class="nba-powered">Powered by Pega CDH Next-Best-Action</span>' +
+      '</div>' +
+    '</div>';
+}
+
+function acceptOffer() {
+  if (!appState.currentNBA) return;
+  NexusCDP.track('offer_accept', {
+    offerId:    appState.currentNBA.id,
+    offerTitle: appState.currentNBA.title,
+    action:     appState.currentNBA.action,
+    channel:    'web'
+  });
+  NexusCDP.feedback(appState.currentNBA.id, 'ACCEPTED', { channel: 'web' });
+  showToast('Offer accepted! Connecting you with a banker...', 'green');
+  var zone = document.getElementById('nba-zone');
+  zone.innerHTML = '<div class="nba-loading"><span>✅ Great choice! A banker will be in touch within 24 hours.</span></div>';
+  appState.currentNBA = null;
+}
+
+function declineOffer() {
+  if (!appState.currentNBA) return;
+  NexusCDP.track('offer_reject', {
+    offerId:    appState.currentNBA.id,
+    offerTitle: appState.currentNBA.title,
+    channel:    'web'
+  });
+  NexusCDP.feedback(appState.currentNBA.id, 'REJECTED', { channel: 'web' });
+  showToast('Preference noted. We\'ll refine your offers.', 'amber');
+  var zone = document.getElementById('nba-zone');
+  zone.style.opacity = '0.5';
+  zone.style.transition = 'opacity .4s';
+  setTimeout(function() {
+    zone.innerHTML = '<div class="nba-loading" style="color:rgba(255,255,255,.5)"><span>Offer dismissed. Check back soon for new recommendations.</span></div>';
+    zone.style.opacity = '1';
+  }, 400);
+  appState.currentNBA = null;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PRODUCT NAVIGATION
+═══════════════════════════════════════════════════════════ */
+function navigateToProduct(productId) {
+  NexusCDP.track('product_view', {
+    product: productId,
+    channel: 'web',
+    source:  'dashboard_card'
+  });
+  showToast('Viewing ' + productId.replace('-', ' ') + ' details', 'green');
+  addLog('product_view', 'PRODUCT_INTEREST', '✅ product:' + productId, 'ok');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PREFERENCES / CONSENT
+═══════════════════════════════════════════════════════════ */
+function savePreferences() {
+  var channels = [];
+  ['email','sms','push','marketing','data'].forEach(function(ch) {
+    var el = document.getElementById('t-' + ch);
+    if (el && !el.checked) channels.push(ch);
+  });
+
+  var statusEl = document.getElementById('consent-status');
+
+  if (channels.length > 0) {
+    NexusCDP.optOut(channels);
+    statusEl.style.display = 'block';
+    statusEl.style.background = '#FEF3C7';
+    statusEl.style.color = '#92400E';
+    statusEl.textContent = '⏳ Propagating to 12 systems...';
+
+    setTimeout(function() {
+      statusEl.style.background = '#F0FDF4';
+      statusEl.style.color = 'var(--green)';
+      statusEl.textContent = '✅ Preferences saved · Propagated to 12 systems · Complete in 210ms';
+      showToast('Preferences saved and propagated', 'green');
+    }, 900);
+  } else {
+    // All opted in — track preference update
+    NexusCDP.track('consent_update', { action: 'all_opted_in', channels: ['email','sms','push','marketing','data'] });
+    statusEl.style.display = 'block';
+    statusEl.style.background = '#F0FDF4';
+    statusEl.style.color = 'var(--green)';
+    statusEl.textContent = '✅ All communication preferences saved';
+    showToast('Preferences saved', 'green');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   EVENT LOG
+═══════════════════════════════════════════════════════════ */
+function addLog(eventType, ihType, status, level) {
+  appState.eventCount++;
+  document.getElementById('log-count').textContent = appState.eventCount;
+
+  var body = document.getElementById('log-body');
+  // Remove empty placeholder
+  var empty = body.querySelector('.log-empty');
+  if (empty) empty.remove();
+
+  var now = new Date();
+  var ts = pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+  var line = document.createElement('div');
+  line.className = 'log-line ' + (level === 'ok' ? 'log-ok' : level === 'err' ? 'log-err' : 'log-warn');
+  line.textContent = '[' + ts + '] ' + eventType + ' → ' + ihType + '   ' + status;
+  body.appendChild(line);
+  body.scrollTop = body.scrollHeight;
+}
+
+function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+function toggleLog() {
+  var strip = document.getElementById('log-strip');
+  var chevron = document.getElementById('log-chevron');
+  appState.logOpen = !appState.logOpen;
+  strip.style.height = appState.logOpen ? '200px' : '36px';
+  chevron.textContent = appState.logOpen ? '▼' : '▲';
+}
+
+function clearLog(e) {
+  e.stopPropagation();
+  document.getElementById('log-body').innerHTML = '<div class="log-empty log-line">Log cleared</div>';
+  appState.eventCount = 0;
+  document.getElementById('log-count').textContent = '0';
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TOASTS
+═══════════════════════════════════════════════════════════ */
+function showToast(msg, type) {
+  var container = document.getElementById('toast-container');
+  var toast = document.createElement('div');
+  toast.className = 'toast' + (type === 'amber' ? ' amber' : type === 'red' ? ' red' : '');
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(function() {
+    toast.classList.add('out');
+    setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
+  }, 3000);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SCENARIO PANEL
+═══════════════════════════════════════════════════════════ */
+function toggleScenarioPanel() {
+  var panel = document.getElementById('scenario-panel');
+  panel.classList.toggle('open');
+}
+
+function scenarioLog(text) {
+  var box = document.getElementById('sc-log-box');
+  // Remove placeholder
+  if (box.children.length === 1 && box.children[0].style && box.children[0].style.fontStyle === 'italic') {
+    box.innerHTML = '';
+  }
+  var line = document.createElement('div');
+  line.className = 'sc-log-line';
+  line.textContent = '› ' + text;
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+}
+
+function setScenarioProgress(current, total) {
+  var prog = document.getElementById('sc-progress');
+  var bar = document.getElementById('sc-progress-bar');
+  prog.style.display = 'block';
+  bar.style.width = Math.round((current / total) * 100) + '%';
+}
+
+function clearScenarioLog() {
+  document.getElementById('sc-log-box').innerHTML = '';
+  document.getElementById('sc-progress').style.display = 'none';
+  document.getElementById('sc-progress-bar').style.width = '0%';
+}
+
+function setScenarioRunning(running, btnId) {
+  appState.scenarioRunning = running;
+  document.getElementById('btn-stop').style.display = running ? 'block' : 'none';
+  document.querySelectorAll('.sc-btn').forEach(function(b) {
+    b.disabled = running;
+    b.classList.remove('running');
+  });
+  if (running && btnId) {
+    var btn = document.getElementById(btnId);
+    if (btn) btn.classList.add('running');
+  }
+  if (!running) {
+    document.getElementById('sc-progress').style.display = 'none';
+  }
+}
+
+function stopScenario() {
+  appState.scenarioStop = true;
+  setScenarioRunning(false);
+  scenarioLog('— Scenario stopped by user —');
+}
+
+function sleep(ms) {
+  return new Promise(function(resolve) { setTimeout(resolve, ms); });
+}
+
+function runScenario(num) {
+  if (appState.scenarioRunning) return;
+  appState.scenarioStop = false;
+  clearScenarioLog();
+
+  // Open panel if not open
+  document.getElementById('scenario-panel').classList.add('open');
+  // Make sure app is visible
+  if (!document.getElementById('p-app').classList.contains('active')) {
+    showPage('app');
+    navTo('dashboard');
+  }
+
+  var scenarios = {
+    1: runScenario1,
+    2: runScenario2,
+    3: runScenario3,
+    4: runScenario4,
+    5: runScenario5,
+    6: runScenario6
+  };
+
+  if (scenarios[num]) {
+    setScenarioRunning(true, 'sc-btn-' + num);
+    scenarios[num]().then(function() {
+      setScenarioRunning(false);
+      if (!appState.scenarioStop) {
+        scenarioLog('✅ Scenario complete!');
+        showToast('Scenario ' + num + ' complete', 'green');
+      }
+    }).catch(function(err) {
+      setScenarioRunning(false);
+      scenarioLog('❌ Error: ' + err.message);
+    });
+  }
+}
+
+/* ── SCENARIO 1: Anonymous Browse (4 steps) ── */
+async function runScenario1() {
+  var total = 4;
+  scenarioLog('Starting: Anonymous Browse');
+  setScenarioProgress(0, total);
+  await sleep(400);
+
+  if (appState.scenarioStop) return;
+  setScenarioProgress(1, total);
+  scenarioLog('[1/4] Browsing dashboard (anonymous)');
+  NexusCDP.track('page_view', { page: 'dashboard', authenticated: false, channel: 'web' });
+  await sleep(1500);
+
+  if (appState.scenarioStop) return;
+  setScenarioProgress(2, total);
+  scenarioLog('[2/4] Browsing home loan product page');
+  NexusCDP.track('page_view', { page: 'home-loan', authenticated: false, channel: 'web' });
+  await sleep(1500);
+
+  if (appState.scenarioStop) return;
+  setScenarioProgress(3, total);
+  scenarioLog('[3/4] Viewing Home Loan product — tracking interest');
+  NexusCDP.track('product_view', { product: 'home-loan', channel: 'web', authenticated: false });
+  await sleep(1500);
+
+  if (appState.scenarioStop) return;
+  setScenarioProgress(4, total);
+  scenarioLog('[4/4] Page view: Rewards Card (anonymous)');
+  NexusCDP.track('product_view', { product: 'rewards-card', channel: 'web', authenticated: false });
+  await sleep(800);
+}
+
+/* ── SCENARIO 2: Login & Identity Stitch (5 steps) ── */
+async function runScenario2() {
+  var total = 5;
+  scenarioLog('Starting: Login & Identity Stitch');
+  setScenarioProgress(0, total);
+  await sleep(400);
+
+  if (appState.scenarioStop) return;
+  setScenarioProgress(1, total);
+  scenarioLog('[1/5] Pre-login: tracking anonymous page views');
+  NexusCDP.track('page_view', { page: 'dashboard', authenticated: false });
+  await sleep(1500);
+
+  if (appState.scenarioStop) return;
+  setScenarioProgress(2, total);
+  scenarioLog('[2/5] Anonymous product interest: Home Loan');
+  NexusCDP.track('product_view', { product: 'home-loan', channel: 'web', authenticated: false });
+  await sleep(1500);
+
+  if (appState.scenarioStop) return;
+  setScenarioProgress(3, total);
+  scenarioLog('[3/5] Anonymous product interest: Term Deposit');
+  NexusCDP.track('product_view', { product: 'term-deposit', channel: 'web', authenticated: false });
+  await sleep(1500);
+
+  if (appState.scenarioStop) return;
+  setScenarioProgress(4, total);
+  scenarioLog('[4/5] Logging in — triggering identity stitch...');
+  await sleep(800);
+
+  if (appState.scenarioStop) return;
+  setScenarioProgress(5, total);
+  scenarioLog('[5/5] identify(CUST-ALICE-001) — stitching pre-login events');
+  NexusCDP.identify('CUST-ALICE-001', { name: 'Alice Smith', tier: 'premium' });
+  await sleep(1200);
+  scenarioLog('    ↳ Stitch complete: anonymous profile merged');
+}
+
+/* ── SCENARIO 3: NBA Decision Flow (4 steps) ── */
+async function runScenario3() {
+  var total = 4;
+  scenarioLog('Starting: NBA Decision Flow');
+  setScenarioProgress(0, total);
+  await sleep(400);
+
+  if (appState.scenarioStop) return;
+  setScenarioProgress(1, total);
+  scenarioLog('[1/4] Identifying customer CUST-ALICE-001');
+  NexusCDP.identify('CUST-ALICE-001', { name: 'Alice Smith', tier: 'premium' });
+  await sleep(1500);
+
+  if (appState.scenarioStop) return;
+  setScenarioProgress(2, total);
+  scenarioLog('[2/4] Fetching personalised NBA from Pega CDH...');
+  navTo('dashboard');
+  resetNBAZone();
+  await sleep(1000);
+
+  if (appState.scenarioStop) return;
+  setScenarioProgress(3, total);
+  scenarioLog('[3/4] getNBA() → CDH real-time decision engine');
+  NexusCDP.getNBA(function(err, decisions) {
+    if (!err && decisions) {
+      showNBABanner(null, decisions);
+      scenarioLog('    ↳ Received ' + decisions.length + ' offer(s): ' + decisions.map(function(d){ return d.id; }).join(', '));
+    }
+  });
+  await sleep(2000);
+
+  if (appState.scenarioStop) return;
+  setScenarioProgress(4, total);
+  scenarioLog('[4/4] Accepting top offer — sending feedback ACCEPTED');
+  if (appState.currentNBA) {
+    NexusCDP.track('offer_accept', { offerId: appState.currentNBA.id, channel: 'web' });
+    NexusCDP.feedback(appState.currentNBA.id, 'ACCEPTED', { channel: 'web', scenario: true });
+  } else {
+    NexusCDP.track('offer_accept', { offerId: 'NBA-HOME-2024', scenario: true });
+    NexusCDP.feedback('NBA-HOME-2024', 'ACCEPTED', { channel: 'web', scenario: true });
+  }
+  await sleep(800);
+}
+
+/* ── SCENARIO 4: Product Browse Journey (5 steps) ── */
+async function runScenario4() {
+  var total = 5;
+  scenarioLog('Starting: Product Browse Journey');
+  setScenarioProgress(0, total);
+  navTo('dashboard');
+  await sleep(400);
+
+  if (appState.scenarioStop) return;
+  setScenarioProgress(1, total);
+  scenarioLog('[1/5] Viewing Dashboard overview');
+  NexusCDP.track('page_view', { page: 'dashboard', channel: 'web' });
+  await sleep(1500);
+
+  if (appState.scenarioStop) return;
+  setScenarioProgress(2, total);
+  scenarioLog('[2/5] Interest: Home Loan — fixed 4.2% p.a.');
+  NexusCDP.track('product_view', { product: 'home-loan', channel: 'web', detail: 'fixed-rate' });
+  await sleep(1500);
+
+  if (appState.scenarioStop) return;
+  setScenarioProgress(3, total);
+  scenarioLog('[3/5] Interest: Rewards Card — 3× points');
+  NexusCDP.track('product_view', { product: 'rewards-card', channel: 'web', detail: 'points' });
+  await sleep(1500);
+
+  if (appState.scenarioStop) return;
+  setScenarioProgress(4, total);
+  scenarioLog('[4/5] Interest: Term Deposit — 5.1% p.a.');
+  NexusCDP.track('product_view', { product: 'term-deposit', channel: 'web', detail: '12-month' });
+  await sleep(1500);
+
+  if (appState.scenarioStop) return;
+  setScenarioProgress(5, total);
+  scenarioLog('[5/5] Compare page_view — product comparison intent');
+  NexusCDP.track('page_view', { page: 'product-compare', products: ['home-loan','term-deposit'], channel: 'web' });
+  await sleep(800);
+}
+
+/* ── SCENARIO 5: Consent Opt-out (3 steps) ── */
+async function runScenario5() {
+  var total = 3;
+  scenarioLog('Starting: Consent Opt-out');
+  setScenarioProgress(0, total);
+  await sleep(400);
+
+  if (appState.scenarioStop) return;
+  setScenarioProgress(1, total);
+  scenarioLog('[1/3] Navigating to Privacy & Communication Preferences');
+  navTo('preferences');
+  await sleep(1500);
+
+  if (appState.scenarioStop) return;
+  setScenarioProgress(2, total);
+  scenarioLog('[2/3] Opting out of email marketing');
+  var emailToggle = document.getElementById('t-email');
+  if (emailToggle) { emailToggle.checked = false; syncToggleThumbs(); }
+  NexusCDP.optOut(['email']);
+  await sleep(1500);
+
+  if (appState.scenarioStop) return;
+  setScenarioProgress(3, total);
+  scenarioLog('[3/3] Propagating consent to 12 downstream systems...');
+  var statusEl = document.getElementById('consent-status');
+  if (statusEl) {
+    statusEl.style.display = 'block';
+    statusEl.style.background = '#FEF3C7';
+    statusEl.style.color = '#92400E';
+    statusEl.textContent = '⏳ Propagating to 12 systems...';
+  }
+  await sleep(1000);
+  if (statusEl) {
+    statusEl.style.background = '#F0FDF4';
+    statusEl.style.color = 'var(--green)';
+    statusEl.textContent = '✅ Consent saved · Propagated to 12 systems · Complete in 210ms';
+  }
+  scenarioLog('    ↳ Propagated to 12 systems in 210ms');
+  await sleep(800);
+}
+
+/* ── SCENARIO 6: Full Journey Automation (12 steps) ── */
+async function runScenario6() {
+  var total = 12;
+  scenarioLog('Starting: Full Journey Automation (12 steps)');
+  setScenarioProgress(0, total);
+  navTo('dashboard');
+  await sleep(500);
+
+  // Steps 1-2: Anonymous browse
+  if (appState.scenarioStop) return;
+  setScenarioProgress(1, total);
+  scenarioLog('[1/12] Anonymous user lands on dashboard');
+  NexusCDP.track('page_view', { page: 'dashboard', authenticated: false });
+  await sleep(1200);
+
+  if (appState.scenarioStop) return;
+  setScenarioProgress(2, total);
+  scenarioLog('[2/12] Anonymous: product interest — Home Loan');
+  NexusCDP.track('product_view', { product: 'home-loan', authenticated: false });
+  await sleep(1200);
+
+  // Steps 3-4: Login + stitch
+  if (appState.scenarioStop) return;
+  setScenarioProgress(3, total);
+  scenarioLog('[3/12] User clicks Sign In');
+  await sleep(1000);
+
+  if (appState.scenarioStop) return;
+  setScenarioProgress(4, total);
+  scenarioLog('[4/12] identify(CUST-ALICE-001) — identity stitch fires');
+  NexusCDP.identify('CUST-ALICE-001', { name: 'Alice Smith', tier: 'premium' });
+  await sleep(1500);
+
+  // Steps 5-6: NBA
+  if (appState.scenarioStop) return;
+  setScenarioProgress(5, total);
+  scenarioLog('[5/12] Fetching NBA from Pega CDH decision engine');
+  resetNBAZone();
+  await sleep(800);
+
+  if (appState.scenarioStop) return;
+  setScenarioProgress(6, total);
+  scenarioLog('[6/12] getNBA() call — awaiting CDH response...');
+  NexusCDP.getNBA(function(err, decisions) {
+    if (!err && decisions) {
+      showNBABanner(null, decisions);
+      scenarioLog('    ↳ CDH returned ' + decisions.length + ' personalised offer(s)');
+    }
+  });
+  await sleep(2000);
+
+  // Steps 7-8: Product browsing
+  if (appState.scenarioStop) return;
+  setScenarioProgress(7, total);
+  scenarioLog('[7/12] Browsing Rewards Card product');
+  NexusCDP.track('product_view', { product: 'rewards-card', channel: 'web', source: 'nba_influenced' });
+  await sleep(1200);
+
+  if (appState.scenarioStop) return;
+  setScenarioProgress(8, total);
+  scenarioLog('[8/12] Browsing Term Deposit product');
+  NexusCDP.track('product_view', { product: 'term-deposit', channel: 'web', source: 'nba_influenced' });
+  await sleep(1200);
+
+  // Step 9: Accept offer
+  if (appState.scenarioStop) return;
+  setScenarioProgress(9, total);
+  scenarioLog('[9/12] Accepting top NBA offer — feedback ACCEPTED');
+  var offerId = (appState.currentNBA && appState.currentNBA.id) || 'NBA-HOME-2024';
+  NexusCDP.track('offer_accept', { offerId: offerId, channel: 'web' });
+  NexusCDP.feedback(offerId, 'ACCEPTED', { channel: 'web' });
+  showToast('Full journey: Offer accepted', 'green');
+  await sleep(1200);
+
+  // Steps 10-11: Consent
+  if (appState.scenarioStop) return;
+  setScenarioProgress(10, total);
+  scenarioLog('[10/12] Navigating to preferences');
+  navTo('preferences');
+  await sleep(1200);
+
+  if (appState.scenarioStop) return;
+  setScenarioProgress(11, total);
+  scenarioLog('[11/12] Opting out of data sharing with partners');
+  var dataToggle = document.getElementById('t-data');
+  NexusCDP.optOut(['data']);
+  await sleep(1200);
+
+  // Step 12: Complete
+  if (appState.scenarioStop) return;
+  setScenarioProgress(12, total);
+  scenarioLog('[12/12] Journey complete — returning to dashboard');
+  navTo('dashboard');
+  NexusCDP.track('page_view', { page: 'dashboard', journey_stage: 'post-conversion' });
+  await sleep(800);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   UTILS
+═══════════════════════════════════════════════════════════ */
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+</script>
+</body>
+</html>

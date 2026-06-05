@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>DemoBank — NexusJS SDK Demo</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #003A61;
+    --blue: #0063AB;
+    --green: #16A34A;
+    --bg: #FFFFFF;
+    --gray: #F2F2F7;
+    --gray2: #E5E5EA;
+    --gray3: #8E8E93;
+    --red: #DC2626;
+    --gold: #D97706;
+    --teal: #0D9488;
+    --purple: #7C3AED;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  body {
+    background: #1C1C1E;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    font-family: var(--font);
+    padding: 24px 0 48px;
+  }
+
+  /* ── PHONE FRAME ── */
+  #phone {
+    width: 390px;
+    min-height: 844px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,.15),
+      0 30px 80px rgba(0,0,0,.7),
+      inset 0 0 0 1px rgba(0,0,0,.2);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── STATUS BAR ── */
+  #status-bar {
+    height: 44px;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+  }
+  #status-bar.dark { color: #fff; }
+  #status-bar.light { color: #000; }
+  .status-time { font-size: 15px; font-weight: 600; letter-spacing: -0.3px; }
+  .status-icons { font-size: 12px; display: flex; gap: 6px; align-items: center; }
+
+  /* ── SCREENS ── */
+  .screen {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
+  .screen.active { display: flex; }
+
+  /* ── HOME INDICATOR ── */
+  #home-indicator {
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 5;
+  }
+  .home-pill {
+    width: 134px;
+    height: 5px;
+    background: #000;
+    border-radius: 3px;
+    opacity: .18;
+  }
+
+  /* ── BIOMETRIC SCREEN ── */
+  #s-biometric {
+    background: var(--bg);
+    align-items: center;
+    justify-content: center;
+    padding: 0 40px;
+    gap: 0;
+  }
+  .bio-wordmark {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--navy);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 48px;
+  }
+  .face-id-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 18px;
+    border: 2.5px solid var(--navy);
+    position: relative;
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .face-id-icon::before {
+    content: '';
+    position: absolute;
+    width: 52px;
+    height: 52px;
+    border: 2px solid rgba(0,58,97,.3);
+    border-radius: 10px;
+  }
+  .face-id-inner {
+    display: grid;
+    grid-template-columns: 10px 10px;
+    grid-template-rows: 10px 10px;
+    gap: 6px;
+  }
+  .face-id-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid var(--navy);
+  }
+  .bio-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 8px;
+  }
+  .bio-sub {
+    font-size: 15px;
+    color: var(--gray3);
+    margin-bottom: 48px;
+  }
+  .btn-primary {
+    width: 100%;
+    height: 56px;
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    border-radius: 28px;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: opacity .15s, transform .1s;
+    font-family: var(--font);
+    margin-bottom: 20px;
+  }
+  .btn-primary:active { opacity: .8; transform: scale(.98); }
+  .btn-primary.green { background: var(--green); }
+  .btn-text {
+    background: none;
+    border: none;
+    color: var(--blue);
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: var(--font);
+  }
+  .spinner {
+    width: 18px;
+    height: 18px;
+    border: 2.5px solid rgba(255,255,255,.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── HOME SCREEN ── */
+  #s-home {
+    background: var(--gray);
+    overflow-y: auto;
+    padding-bottom: 80px;
+  }
+  #s-home::-webkit-scrollbar { display: none; }
+
+  .home-topbar {
+    background: var(--bg);
+    padding: 8px 20px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .home-greeting { font-size: 22px; font-weight: 700; color: #000; }
+  .bell-btn {
+    width: 36px; height: 36px;
+    background: var(--gray);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+  }
+
+  .balance-card {
+    margin: 16px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--navy) 0%, var(--blue) 100%);
+    padding: 24px;
+    color: #fff;
+  }
+  .card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .card-logo { font-size: 13px; font-weight: 700; letter-spacing: .8px; opacity: .85; }
+  .card-icon { font-size: 22px; opacity: .7; }
+  .balance-amount { font-size: 34px; font-weight: 700; letter-spacing: -1px; margin-bottom: 20px; }
+  .card-bottom {
+    display: flex;
+    justify-content: space-between;
+    opacity: .75;
+    font-size: 13px;
+  }
+
+  .quick-actions {
+    background: var(--bg);
+    margin: 0 16px 16px;
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-around;
+  }
+  .qa-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+  .qa-circle {
+    width: 56px;
+    height: 56px;
+    background: var(--navy);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    transition: transform .1s;
+  }
+  .qa-circle:active { transform: scale(.92); }
+  .qa-label { font-size: 11px; color: var(--gray3); font-weight: 500; }
+
+  #offer-card {
+    display: none;
+    margin: 0 16px 16px;
+    background: var(--bg);
+    border-radius: 12px;
+    border-left: 4px solid var(--blue);
+    padding: 16px;
+    animation: slideIn .3s ease;
+  }
+  #offer-card.visible { display: block; }
+  @keyframes slideIn { from { opacity:0; transform: translateY(-8px); } to { opacity:1; transform: translateY(0); } }
+  .offer-tag {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--blue);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 6px;
+  }
+  .offer-title-text { font-size: 16px; font-weight: 600; color: #000; margin-bottom: 12px; }
+  .offer-link {
+    color: var(--blue);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: var(--font);
+    padding: 0;
+  }
+
+  .section-heading {
+    font-size: 17px;
+    font-weight: 700;
+    color: #000;
+    padding: 4px 16px 8px;
+  }
+  .activity-card {
+    background: var(--bg);
+    margin: 0 16px 16px;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .txn-row {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    gap: 12px;
+    cursor: pointer;
+  }
+  .txn-row:not(:last-child) { border-bottom: 1px solid var(--gray); }
+  .txn-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .txn-info { flex: 1; }
+  .txn-merchant { font-size: 15px; font-weight: 500; color: #000; }
+  .txn-date { font-size: 12px; color: var(--gray3); margin-top: 2px; }
+  .txn-amount { font-size: 15px; font-weight: 600; }
+  .txn-amount.credit { color: var(--green); }
+  .txn-amount.debit { color: #000; }
+
+  /* ── BOTTOM TAB BAR ── */
+  #tab-bar {
+    position: absolute;
+    bottom: 34px;
+    left: 0; right: 0;
+    height: 49px;
+    background: rgba(255,255,255,.95);
+    border-top: 1px solid var(--gray2);
+    display: flex;
+    z-index: 20;
+    backdrop-filter: blur(10px);
+  }
+  .tab-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  .tab-item:active { opacity: .6; }
+  .tab-icon { font-size: 20px; }
+  .tab-label { font-size: 10px; color: var(--gray3); font-weight: 500; }
+  .tab-item.active .tab-label { color: var(--navy); }
+
+  /* ── PRODUCTS SCREEN ── */
+  #s-products {
+    background: var(--gray);
+    overflow-y: auto;
+    padding-bottom: 40px;
+  }
+  #s-products::-webkit-scrollbar { display: none; }
+
+  .back-bar {
+    background: var(--bg);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .back-btn {
+    background: none;
+    border: none;
+    color: var(--blue);
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: var(--font);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+  }
+  .back-bar-title { font-size: 17px; font-weight: 600; color: #000; }
+
+  .products-scroll {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: 16px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .products-scroll::-webkit-scrollbar { display: none; }
+  .product-card {
+    width: 280px;
+    height: 180px;
+    border-radius: 20px;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    padding: 24px;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: transform .15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .product-card:active { transform: scale(.97); }
+  .product-card.teal { background: linear-gradient(135deg, #0D9488, #06B6D4); }
+  .product-card.navy { background: linear-gradient(135deg, #003A61, #0063AB); }
+  .product-card.green { background: linear-gradient(135deg, #16A34A, #059669); }
+  .product-card.purple { background: linear-gradient(135deg, #7C3AED, #A855F7); }
+  .product-card::after {
+    content: '';
+    position: absolute;
+    width: 160px; height: 160px;
+    background: rgba(255,255,255,.07);
+    border-radius: 50%;
+    right: -40px; top: -40px;
+  }
+  .prod-name { font-size: 20px; font-weight: 700; }
+  .prod-rate { font-size: 14px; opacity: .85; margin-top: 4px; }
+  .prod-btn {
+    align-self: flex-start;
+    background: rgba(255,255,255,.25);
+    border: 1.5px solid rgba(255,255,255,.6);
+    color: #fff;
+    border-radius: 20px;
+    padding: 8px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: background .15s;
+  }
+  .prod-btn:hover { background: rgba(255,255,255,.35); }
+
+  /* ── OFFER DETAIL SCREEN ── */
+  #s-offer {
+    background: var(--gray);
+    overflow-y: auto;
+    padding-bottom: 40px;
+  }
+  #s-offer::-webkit-scrollbar { display: none; }
+
+  .offer-hero {
+    margin: 16px;
+    height: 200px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--navy), var(--blue));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    gap: 12px;
+  }
+  .offer-hero-emoji { font-size: 56px; }
+  .offer-hero-name { font-size: 22px; font-weight: 700; }
+
+  .pills-row {
+    display: flex;
+    gap: 8px;
+    padding: 0 16px 16px;
+    flex-wrap: wrap;
+  }
+  .pill-chip {
+    background: rgba(0,99,171,.1);
+    color: var(--blue);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .rate-block {
+    background: var(--bg);
+    margin: 0 16px 16px;
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+  }
+  .rate-big { font-size: 56px; font-weight: 800; color: var(--navy); letter-spacing: -2px; }
+  .rate-sub { font-size: 15px; color: var(--gray3); margin-top: 4px; }
+
+  .personalised-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(22,163,74,.1);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--green);
+    margin: 0 16px 16px;
+  }
+
+  .offer-cta-wrap { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+  /* ── CONFIRMATION SCREEN ── */
+  #s-confirm {
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    gap: 0;
+    background: var(--bg);
+  }
+  .check-circle {
+    width: 80px;
+    height: 80px;
+    background: rgba(22,163,74,.12);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    margin-bottom: 24px;
+  }
+  .confirm-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #000;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .confirm-body {
+    font-size: 15px;
+    color: var(--gray3);
+    text-align: center;
+    line-height: 1.5;
+    margin-bottom: 40px;
+  }
+
+  /* ── PROFILE SCREEN ── */
+  #s-profile {
+    background: var(--gray);
+    overflow-y: auto;
+    padding-bottom: 40px;
+  }
+  #s-profile::-webkit-scrollbar { display: none; }
+
+  .profile-topbar {
+    background: var(--bg);
+    padding: 12px 16px;
+    font-size: 17px;
+    font-weight: 600;
+    color: #000;
+  }
+  .profile-avatar-wrap {
+    background: var(--bg);
+    padding: 32px 16px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .avatar-circle {
+    width: 80px;
+    height: 80px;
+    background: var(--navy);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 26px;
+    font-weight: 700;
+  }
+  .avatar-name { font-size: 20px; font-weight: 700; color: #000; }
+  .premium-badge {
+    background: rgba(217,119,6,.15);
+    color: var(--gold);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+
+  .settings-card {
+    background: var(--bg);
+    margin: 8px 16px;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .settings-row {
+    display: flex;
+    align-items: center;
+    padding: 15px 16px;
+    gap: 12px;
+    cursor: pointer;
+    transition: background .1s;
+  }
+  .settings-row:not(:last-child) { border-bottom: 1px solid var(--gray); }
+  .settings-row:active { background: var(--gray); }
+  .settings-icon { font-size: 20px; width: 24px; text-align: center; }
+  .settings-label { flex: 1; font-size: 16px; color: #000; }
+  .settings-label.red { color: var(--red); }
+  .settings-chevron { color: var(--gray3); font-size: 14px; }
+
+  /* ── EVENTS DRAWER ── */
+  #events-drawer {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+  }
+  #drawer-handle {
+    pointer-events: all;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 28px;
+    cursor: pointer;
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid var(--gray2);
+  }
+  .handle-pill {
+    width: 34px;
+    height: 4px;
+    background: var(--gray2);
+    border-radius: 2px;
+  }
+  #drawer-content {
+    background: rgba(255,255,255,.97);
+    backdrop-filter: blur(12px);
+    height: 0;
+    overflow: hidden;
+    transition: height .3s cubic-bezier(.4,0,.2,1);
+    pointer-events: all;
+    border-top: 1px solid var(--gray2);
+  }
+  #drawer-content.open { height: calc(844px * .6); }
+  .drawer-inner {
+    padding: 16px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  .drawer-heading {
+    font-size: 15px;
+    font-weight: 700;
+    color: #000;
+    margin-bottom: 12px;
+  }
+  #events-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  #events-list::-webkit-scrollbar { display: none; }
+  .event-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: var(--gray);
+    border-radius: 8px;
+    font-size: 12px;
+  }
+  .event-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .event-type { font-weight: 600; color: #000; flex: 1; }
+  .event-cdh { color: var(--gray3); font-size: 11px; }
+  .event-status { font-size: 11px; }
+  .event-status.sent { color: var(--green); }
+  .event-status.pending { color: var(--gold); }
+
+  /* ── SCENARIO PANEL ── */
+  #fab {
+    position: absolute;
+    bottom: 100px;
+    right: 16px;
+    width: 56px;
+    height: 56px;
+    background: var(--navy);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    cursor: pointer;
+    z-index: 30;
+    box-shadow: 0 4px 16px rgba(0,58,97,.4);
+    border: none;
+    transition: transform .15s;
+  }
+  #fab:active { transform: scale(.92); }
+
+  #scenario-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    z-index: 60;
+    display: none;
+    animation: fadeIn .2s;
+  }
+  #scenario-overlay.open { display: block; }
+  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+  #scenario-sheet {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: var(--bg);
+    border-radius: 24px 24px 0 0;
+    padding: 16px 16px 34px;
+    transform: translateY(100%);
+    transition: transform .3s cubic-bezier(.4,0,.2,1);
+    max-height: 85%;
+    overflow-y: auto;
+    z-index: 61;
+  }
+  #scenario-sheet::-webkit-scrollbar { display: none; }
+  #scenario-sheet.open { transform: translateY(0); }
+
+  .sheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .sheet-title { font-size: 18px; font-weight: 700; color: #000; }
+  .sheet-close {
+    width: 32px; height: 32px;
+    background: var(--gray);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    font-family: var(--font);
+  }
+
+  .scenario-btn {
+    width: 100%;
+    height: 48px;
+    background: var(--gray);
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #000;
+    cursor: pointer;
+    text-align: left;
+    padding: 0 16px;
+    margin-bottom: 8px;
+    font-family: var(--font);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background .15s;
+  }
+  .scenario-btn:active { background: var(--gray2); }
+
+  #scenario-log {
+    margin-top: 12px;
+    background: #1C1C1E;
+    border-radius: 12px;
+    padding: 12px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 11px;
+    color: #98FB98;
+    min-height: 80px;
+    max-height: 160px;
+    overflow-y: auto;
+    line-height: 1.6;
+  }
+  #scenario-log::-webkit-scrollbar { display: none; }
+
+  /* ── TOAST ── */
+  #toast {
+    position: absolute;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(0,0,0,.85);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity .2s, transform .2s;
+    z-index: 100;
+    pointer-events: none;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div id="phone">
+  <!-- STATUS BAR -->
+  <div id="status-bar" class="light">
+    <span class="status-time">9:41</span>
+    <span class="status-icons">▲▲▲ WiFi ■■■■</span>
+  </div>
+
+  <!-- ═══ SCREEN 1: BIOMETRIC ═══ -->
+  <div id="s-biometric" class="screen active">
+    <div class="bio-wordmark">DemoBank</div>
+    <div class="face-id-icon">
+      <div class="face-id-inner">
+        <div class="face-id-dot"></div>
+        <div class="face-id-dot"></div>
+        <div class="face-id-dot"></div>
+        <div class="face-id-dot"></div>
+      </div>
+    </div>
+    <div class="bio-title">DemoBank</div>
+    <div class="bio-sub">alice.smith</div>
+    <button class="btn-primary" id="face-id-btn" onclick="startBiometric()">
+      Sign in with Face ID
+    </button>
+    <button class="btn-text">Use Passcode</button>
+  </div>
+
+  <!-- ═══ SCREEN 2: HOME ═══ -->
+  <div id="s-home" class="screen">
+    <div class="home-topbar">
+      <div class="home-greeting">Good morning ☀️</div>
+      <button class="bell-btn">🔔</button>
+    </div>
+
+    <!-- Balance Card -->
+    <div class="balance-card">
+      <div class="card-top">
+        <span class="card-logo">DemoBank</span>
+        <span class="card-icon">💳</span>
+      </div>
+      <div class="balance-amount">$84,500.00</div>
+      <div class="card-bottom">
+        <span>••4521</span>
+        <span>Available</span>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <div class="qa-item" onclick="handleQuickAction('send')">
+        <div class="qa-circle">💸</div>
+        <span class="qa-label">Send</span>
+      </div>
+      <div class="qa-item" onclick="handleQuickAction('receive')">
+        <div class="qa-circle">📥</div>
+        <span class="qa-label">Receive</span>
+      </div>
+      <div class="qa-item" onclick="handleQuickAction('bills')">
+        <div class="qa-circle">💳</div>
+        <span class="qa-label">Bills</span>
+      </div>
+      <div class="qa-item" onclick="handleQuickAction('more')">
+        <div class="qa-circle">⋯</div>
+        <span class="qa-label">More</span>
+      </div>
+    </div>
+
+    <!-- Smart Offer Card -->
+    <div id="offer-card">
+      <div class="offer-tag">🎯 Personalised Offer</div>
+      <div class="offer-title-text" id="offer-title">Home Loan 4.2% fixed</div>
+      <button class="offer-link" onclick="navTo('s-offer')">View Offer →</button>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="section-heading">Recent Activity</div>
+    <div class="activity-card">
+      <div class="txn-row">
+        <div class="txn-icon" style="background:#F5F5F5;">🍎</div>
+        <div class="txn-info">
+          <div class="txn-merchant">Apple Store</div>
+          <div class="txn-date">Today</div>
+        </div>
+        <div class="txn-amount debit">-$12.99</div>
+      </div>
+      <div class="txn-row">
+        <div class="txn-icon" style="background:#DCFCE7;">💼</div>
+        <div class="txn-info">
+          <div class="txn-merchant">Salary</div>
+          <div class="txn-date">Yesterday</div>
+        </div>
+        <div class="txn-amount credit">+$5,200.00</div>
+      </div>
+      <div class="txn-row">
+        <div class="txn-icon" style="background:#FFF7ED;">☕</div>
+        <div class="txn-info">
+          <div class="txn-merchant">Starbucks</div>
+          <div class="txn-date">Jun 3</div>
+        </div>
+        <div class="txn-amount debit">-$6.50</div>
+      </div>
+      <div class="txn-row">
+        <div class="txn-icon" style="background:#FEF2F2;">🎬</div>
+        <div class="txn-info">
+          <div class="txn-merchant">Netflix</div>
+          <div class="txn-date">Jun 1</div>
+        </div>
+        <div class="txn-amount debit">-$15.99</div>
+      </div>
+      <div class="txn-row">
+        <div class="txn-icon" style="background:#FFF7ED;">📦</div>
+        <div class="txn-info">
+          <div class="txn-merchant">Amazon</div>
+          <div class="txn-date">May 31</div>
+        </div>
+        <div class="txn-amount debit">-$42.00</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SCREEN 3: PRODUCTS ═══ -->
+  <div id="s-products" class="screen">
+    <div class="back-bar">
+      <button class="back-btn" onclick="navBack()">‹ Back</button>
+      <span class="back-bar-title">Products</span>
+    </div>
+    <div class="section-heading" style="padding-top:16px;">Explore Products</div>
+    <div class="products-scroll">
+      <div class="product-card teal" onclick="trackProduct('home-loan','Home Loan')">
+        <div>
+          <div class="prod-name">Home Loan</div>
+          <div class="prod-rate">4.2% p.a. Fixed</div>
+        </div>
+        <button class="prod-btn" onclick="event.stopPropagation();trackProduct('home-loan','Home Loan');navTo('s-offer')">Apply</button>
+      </div>
+      <div class="product-card navy" onclick="trackProduct('rewards-card','Rewards Card')">
+        <div>
+          <div class="prod-name">Rewards Card</div>
+          <div class="prod-rate">Earn 3× points</div>
+        </div>
+        <button class="prod-btn" onclick="event.stopPropagation();trackProduct('rewards-card','Rewards Card')">View</button>
+      </div>
+      <div class="product-card green" onclick="trackProduct('term-deposit','Term Deposit')">
+        <div>
+          <div class="prod-name">Term Deposit</div>
+          <div class="prod-rate">5.1% p.a.</div>
+        </div>
+        <button class="prod-btn" onclick="event.stopPropagation();trackProduct('term-deposit','Term Deposit')">Invest</button>
+      </div>
+      <div class="product-card purple" onclick="trackProduct('personal-loan','Personal Loan')">
+        <div>
+          <div class="prod-name">Personal Loan</div>
+          <div class="prod-rate">7.9% p.a.</div>
+        </div>
+        <button class="prod-btn" onclick="event.stopPropagation();trackProduct('personal-loan','Personal Loan')">Calculate</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SCREEN 4: OFFER DETAIL ═══ -->
+  <div id="s-offer" class="screen">
+    <div class="back-bar">
+      <button class="back-btn" onclick="navBack()">‹ Back</button>
+    </div>
+    <div class="offer-hero">
+      <div class="offer-hero-emoji">🏠</div>
+      <div class="offer-hero-name" id="detail-product">Home Loan</div>
+    </div>
+    <div class="pills-row">
+      <div class="pill-chip">✓ Fixed Rate</div>
+      <div class="pill-chip">✓ No Fees</div>
+      <div class="pill-chip">✓ Fast Approval</div>
+    </div>
+    <div class="rate-block">
+      <div class="rate-big" id="detail-rate">4.2%</div>
+      <div class="rate-sub">per annum</div>
+    </div>
+    <div class="personalised-badge" id="detail-propensity">
+      ✦ Personalised for Alice &nbsp;·&nbsp; High Match
+    </div>
+    <div class="offer-cta-wrap">
+      <button class="btn-primary green" onclick="acceptOffer()">
+        Accept &amp; Apply — Start Now
+      </button>
+      <button class="btn-text" style="color:var(--gray3);" onclick="navTo('s-home')">
+        Maybe Later
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══ SCREEN 5: CONFIRMATION ═══ -->
+  <div id="s-confirm" class="screen">
+    <div class="check-circle">✅</div>
+    <div class="confirm-title">Application Started! 🎉</div>
+    <div class="confirm-body">We'll review your Home Loan application<br>within 2 business days.</div>
+    <button class="btn-primary" style="max-width:280px;" onclick="navTo('s-home')">
+      Back to Home
+    </button>
+  </div>
+
+  <!-- ═══ SCREEN 6: PROFILE ═══ -->
+  <div id="s-profile" class="screen">
+    <div class="profile-topbar">Profile</div>
+    <div class="profile-avatar-wrap">
+      <div class="avatar-circle">AS</div>
+      <div class="avatar-name">Alice Smith</div>
+      <div class="premium-badge">Premium</div>
+    </div>
+    <div class="settings-card">
+      <div class="settings-row">
+        <span class="settings-icon">🔔</span>
+        <span class="settings-label">Notifications</span>
+        <span class="settings-chevron">›</span>
+      </div>
+      <div class="settings-row">
+        <span class="settings-icon">🔒</span>
+        <span class="settings-label">Privacy &amp; Data</span>
+        <span class="settings-chevron">›</span>
+      </div>
+      <div class="settings-row" onclick="doOptOut()">
+        <span class="settings-icon">📢</span>
+        <span class="settings-label">Marketing Preferences</span>
+        <span class="settings-chevron">›</span>
+      </div>
+      <div class="settings-row">
+        <span class="settings-icon">⚙️</span>
+        <span class="settings-label">Security</span>
+        <span class="settings-chevron">›</span>
+      </div>
+      <div class="settings-row" onclick="doSignOut()">
+        <span class="settings-icon">🚪</span>
+        <span class="settings-label red">Sign Out</span>
+        <span class="settings-chevron" style="color:var(--red);">›</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ BOTTOM TAB BAR ══════ -->
+  <div id="tab-bar">
+    <div class="tab-item active" onclick="switchTab('s-home', this)">
+      <span class="tab-icon">🏠</span>
+      <span class="tab-label">Home</span>
+    </div>
+    <div class="tab-item" onclick="switchTab('s-products', this)">
+      <span class="tab-icon">💸</span>
+      <span class="tab-label">Pay</span>
+    </div>
+    <div class="tab-item" onclick="switchTab('s-products', this)">
+      <span class="tab-icon">💳</span>
+      <span class="tab-label">Cards</span>
+    </div>
+    <div class="tab-item" onclick="switchTab('s-profile', this)">
+      <span class="tab-icon">👤</span>
+      <span class="tab-label">Profile</span>
+    </div>
+  </div>
+
+  <!-- ══════ EVENTS DRAWER ══════ -->
+  <div id="events-drawer">
+    <div id="drawer-handle" onclick="toggleDrawer()">
+      <div class="handle-pill"></div>
+    </div>
+    <div id="drawer-content">
+      <div class="drawer-inner">
+        <div class="drawer-heading" id="drawer-heading">📡 0 events this session</div>
+        <div id="events-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ SCENARIO FAB ══════ -->
+  <button id="fab" onclick="openScenarios()">⚡</button>
+
+  <!-- ══════ SCENARIO OVERLAY + SHEET ══════ -->
+  <div id="scenario-overlay" onclick="closeScenarios()"></div>
+  <div id="scenario-sheet">
+    <div class="sheet-header">
+      <span class="sheet-title">Demo Scenarios</span>
+      <button class="sheet-close" onclick="closeScenarios()">✕</button>
+    </div>
+    <button class="scenario-btn" onclick="runScenario(1)">📱 App Open (anonymous tracking)</button>
+    <button class="scenario-btn" onclick="runScenario(2)">🔐 Face ID Login + Identity Stitch</button>
+    <button class="scenario-btn" onclick="runScenario(3)">🎯 NBA Offer Push Simulation</button>
+    <button class="scenario-btn" onclick="runScenario(4)">🏠 Browse Home Loan Products</button>
+    <button class="scenario-btn" onclick="runScenario(5)">✅ Accept Offer + Record Feedback</button>
+    <button class="scenario-btn" onclick="runScenario(6)">🔒 Privacy Opt-out (GDPR)</button>
+    <div id="scenario-log">Ready. Tap a scenario to run…</div>
+  </div>
+
+  <!-- ══════ TOAST ══════ -->
+  <div id="toast"></div>
+
+  <!-- ══════ HOME INDICATOR ══════ -->
+  <div id="home-indicator"><div class="home-pill"></div></div>
+</div>
+
+<!-- ════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════ -->
+<script src="../sdk/nexus-mobile.js"></script>
+<script>
+/* ─── STATE ─── */
+let currentScreen = 's-biometric';
+let navHistory = [];
+let drawerOpen = false;
+let eventCount = 0;
+let currentDecisionId = null;
+
+const EVENT_COLORS = {
+  app_open: '#0063AB',
+  biometric_login: '#16A34A',
+  identity_stitch: '#7C3AED',
+  product_view: '#0D9488',
+  offer_view: '#D97706',
+  offer_accept: '#16A34A',
+  nba_request: '#0063AB',
+  opt_out: '#DC2626',
+  reset: '#8E8E93',
+  page_view: '#0063AB',
+};
+
+const CDH_MAP = {
+  app_open: 'MobileSessionStart',
+  biometric_login: 'AuthEvent',
+  identity_stitch: 'IdentityLink',
+  product_view: 'ProductInterest',
+  offer_view: 'OfferImpression',
+  offer_accept: 'OfferAcceptance',
+  nba_request: 'NBARequest',
+  opt_out: 'ConsentUpdate',
+  reset: 'ProfileReset',
+  page_view: 'PageView',
+};
+
+/* ─── INIT ─── */
+document.addEventListener('DOMContentLoaded', function() {
+  // SDK init with graceful fallback
+  if (typeof NexusCDP !== 'undefined') {
+    NexusCDP.init({
+      collectorUrl: 'http://localhost:3001',
+      profileUrl:   'http://localhost:3002',
+      cdhUrl:       'http://localhost:3010',
+      feedbackUrl:  'http://localhost:3003',
+      consentUrl:   'http://localhost:3004',
+      debug: true,
+      autoTrack: false
+    });
+
+    NexusCDP.trackAppOpen({ platform: 'mobile', appVersion: '2.1.0' });
+
+    NexusCDP.on('event:accepted', function(evt) {
+      addToDrawer(evt.type || evt.eventType || 'event', 'sent');
+    });
+
+    NexusCDP.on('nba:received', showOffer);
+  } else {
+    // SDK not loaded — simulate
+    console.warn('[Demo] nexus-mobile.js not found — using stub SDK');
+    window.NexusCDP = createStubSDK();
+    NexusCDP.init({});
+    NexusCDP.trackAppOpen({ platform: 'mobile', appVersion: '2.1.0' });
+  }
+
+  addToDrawer('app_open', 'sent');
+
+  // Clock
+  setInterval(updateClock, 1000);
+  updateClock();
+});
+
+function updateClock() {
+  const now = new Date();
+  const h = now.getHours();
+  const m = String(now.getMinutes()).padStart(2, '0');
+  document.querySelector('.status-time').textContent = `${h}:${m}`;
+}
+
+/* ─── STUB SDK (when nexus-mobile.js not available) ─── */
+function createStubSDK() {
+  const handlers = {};
+  let anonId = 'anon-' + Math.random().toString(36).slice(2,10);
+  let customerId = null;
+
+  function emit(event, data) {
+    if (handlers[event]) handlers[event].forEach(fn => fn(data));
+  }
+
+  function fakePost(url, body) {
+    console.log(`[NexusCDP→${url}]`, JSON.stringify(body, null, 2));
+    // Simulate network
+    setTimeout(() => emit('event:accepted', body), 300);
+    return Promise.resolve({ status: 'ok' });
+  }
+
+  return {
+    init(cfg) { console.log('[NexusCDP] init', cfg); },
+    trackAppOpen(props) { fakePost('collector/app_open', { type:'app_open', anonId, ...props }); },
+    track(eventType, props, channel) {
+      fakePost('collector/track', { type: eventType, anonId, customerId, channel, ...props });
+    },
+    biometricLogin(custId, profile) {
+      customerId = custId;
+      fakePost('collector/biometric_login', { type:'biometric_login', anonId, customerId, ...profile });
+      emit('event:accepted', { type:'biometric_login' });
+      // stitch
+      setTimeout(() => {
+        fakePost('collector/identity_stitch', { type:'identity_stitch', anonId, customerId });
+        emit('event:accepted', { type:'identity_stitch' });
+      }, 500);
+    },
+    getNBA(cb) {
+      setTimeout(() => {
+        const decision = {
+          decisionId: 'dec-' + Math.random().toString(36).slice(2,8),
+          product: 'Home Loan',
+          rate: '4.2%',
+          offer: 'home-loan',
+          propensity: 'High Match (92%)',
+          title: 'Home Loan 4.2% fixed'
+        };
+        emit('nba:received', decision);
+        if (cb) cb(null, [decision]);
+      }, 600);
+    },
+    feedback(decisionId, action, result, channel) {
+      fakePost('feedback/record', { decisionId, action, result, channel });
+      emit('event:accepted', { type:'offer_accept' });
+    },
+    optOut(channels) {
+      fakePost('consent/optout', { channels, customerId });
+      emit('event:accepted', { type:'opt_out' });
+    },
+    reset() {
+      customerId = null;
+      anonId = 'anon-' + Math.random().toString(36).slice(2,10);
+      fakePost('collector/reset', { type:'reset' });
+      emit('event:accepted', { type:'reset' });
+    },
+    on(event, fn) {
+      if (!handlers[event]) handlers[event] = [];
+      handlers[event].push(fn);
+    }
+  };
+}
+
+/* ─── NAVIGATION ─── */
+function navTo(screenId) {
+  const prev = document.getElementById(currentScreen);
+  const next = document.getElementById(screenId);
+  if (!next) return;
+
+  if (prev) prev.classList.remove('active');
+  next.classList.add('active');
+
+  navHistory.push(currentScreen);
+  currentScreen = screenId;
+
+  // Status bar colour
+  const statusBar = document.getElementById('status-bar');
+  const tabBar = document.getElementById('tab-bar');
+  const fab = document.getElementById('fab');
+
+  if (screenId === 's-biometric' || screenId === 's-confirm') {
+    statusBar.className = 'light';
+    tabBar.style.display = 'none';
+    fab.style.display = 'none';
+  } else {
+    statusBar.className = 'light';
+    tabBar.style.display = 'flex';
+    fab.style.display = 'flex';
+  }
+
+  if (typeof NexusCDP !== 'undefined') {
+    NexusCDP.track('page_view', { page: screenId }, 'mobile');
+  }
+  addToDrawer('page_view', 'sent');
+}
+
+function navBack() {
+  if (navHistory.length > 0) {
+    const prev = navHistory.pop();
+    const current = document.getElementById(currentScreen);
+    const target = document.getElementById(prev);
+    if (current) current.classList.remove('active');
+    if (target) target.classList.add('active');
+    currentScreen = prev;
+  }
+}
+
+function switchTab(screenId, tabEl) {
+  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+  tabEl.classList.add('active');
+  navHistory = [];
+  navTo(screenId);
+}
+
+/* ─── BIOMETRIC ─── */
+function startBiometric() {
+  const btn = document.getElementById('face-id-btn');
+  btn.innerHTML = '<div class="spinner"></div> Authenticating…';
+  btn.disabled = true;
+
+  setTimeout(() => {
+    biometricLogin();
+  }, 1500);
+}
+
+function biometricLogin() {
+  NexusCDP.biometricLogin('CUST-ALICE-001', {
+    name: 'Alice Smith',
+    tier: 'premium'
+  });
+  addToDrawer('biometric_login', 'sent');
+  addToDrawer('identity_stitch', 'sent');
+
+  const btn = document.getElementById('face-id-btn');
+  btn.innerHTML = 'Sign in with Face ID';
+  btn.disabled = false;
+
+  navTo('s-home');
+
+  setTimeout(() => {
+    NexusCDP.getNBA(showOffer);
+    addToDrawer('nba_request', 'pending');
+  }, 2000);
+}
+
+/* ─── OFFER ─── */
+function showOffer(err, decisions) {
+  if (err) { console.warn('[showOffer] error', err); return; }
+  const list = Array.isArray(decisions) ? decisions : (decisions ? [decisions] : []);
+  if (!list.length) return;
+
+  const d = list[0];
+  currentDecisionId = d.decisionId || 'dec-demo-001';
+
+  document.getElementById('offer-title').textContent = d.title || 'Home Loan 4.2% fixed';
+  document.getElementById('detail-product').textContent = d.product || 'Home Loan';
+  document.getElementById('detail-rate').textContent = d.rate || '4.2%';
+  document.getElementById('detail-propensity').textContent =
+    `✦ Personalised for Alice · ${d.propensity || 'High Match (92%)'}`;
+
+  const offerCard = document.getElementById('offer-card');
+  offerCard.classList.add('visible');
+  addToDrawer('offer_view', 'sent');
+}
+
+/* ─── ACCEPT OFFER ─── */
+function acceptOffer() {
+  NexusCDP.track('offer_accept', { offer: 'home-loan' }, 'mobile');
+  if (currentDecisionId) {
+    NexusCDP.feedback(currentDecisionId, 'home-loan-offer', 'ACCEPTED', 'mobile');
+  }
+  addToDrawer('offer_accept', 'sent');
+  navTo('s-confirm');
+}
+
+/* ─── PRODUCT TRACKING ─── */
+function trackProduct(productId, productName) {
+  NexusCDP.track('product_view', { product: productId, productName }, 'mobile');
+  addToDrawer('product_view', 'sent');
+  showToast(`Tracked: ${productName}`);
+}
+
+/* ─── QUICK ACTIONS ─── */
+function handleQuickAction(action) {
+  NexusCDP.track('quick_action', { action }, 'mobile');
+  addToDrawer('quick_action', 'sent');
+  if (action === 'more') navTo('s-products');
+}
+
+/* ─── PROFILE ACTIONS ─── */
+function doOptOut() {
+  NexusCDP.optOut(['push', 'email']);
+  addToDrawer('opt_out', 'sent');
+  showToast('Preferences saved');
+}
+
+function doSignOut() {
+  NexusCDP.reset();
+  addToDrawer('reset', 'sent');
+  setTimeout(() => {
+    navHistory = [];
+    document.getElementById(currentScreen).classList.remove('active');
+    document.getElementById('s-biometric').classList.add('active');
+    currentScreen = 's-biometric';
+    document.getElementById('tab-bar').style.display = 'none';
+    document.getElementById('fab').style.display = 'none';
+    document.getElementById('offer-card').classList.remove('visible');
+  }, 300);
+}
+
+/* ─── DRAWER ─── */
+function toggleDrawer() {
+  drawerOpen = !drawerOpen;
+  const content = document.getElementById('drawer-content');
+  if (drawerOpen) content.classList.add('open');
+  else content.classList.remove('open');
+}
+
+function addToDrawer(eventType, status) {
+  eventCount++;
+  document.getElementById('drawer-heading').textContent = `📡 ${eventCount} events this session`;
+
+  const list = document.getElementById('events-list');
+  const row = document.createElement('div');
+  row.className = 'event-row';
+
+  const color = EVENT_COLORS[eventType] || '#8E8E93';
+  const cdhType = CDH_MAP[eventType] || 'GenericEvent';
+  const statusIcon = status === 'sent' ? '✓ sent' : '⏳ pending';
+  const statusClass = status === 'sent' ? 'sent' : 'pending';
+
+  row.innerHTML = `
+    <div class="event-dot" style="background:${color}"></div>
+    <span class="event-type">${eventType}</span>
+    <span class="event-cdh">${cdhType}</span>
+    <span class="event-status ${statusClass}">${statusIcon}</span>
+  `;
+
+  list.insertBefore(row, list.firstChild);
+
+  // Keep max 20
+  while (list.children.length > 20) list.removeChild(list.lastChild);
+}
+
+/* ─── SCENARIOS ─── */
+function openScenarios() {
+  document.getElementById('scenario-overlay').classList.add('open');
+  document.getElementById('scenario-sheet').classList.add('open');
+}
+function closeScenarios() {
+  document.getElementById('scenario-overlay').classList.remove('open');
+  document.getElementById('scenario-sheet').classList.remove('open');
+}
+
+function scenarioLog(msg) {
+  const el = document.getElementById('scenario-log');
+  const ts = new Date().toLocaleTimeString('en', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  el.textContent += `\n[${ts}] ${msg}`;
+  el.scrollTop = el.scrollHeight;
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function runScenario(n) {
+  document.getElementById('scenario-log').textContent = `▶ Scenario ${n} started…`;
+
+  switch (n) {
+    case 1: await scenarioAppOpen(); break;
+    case 2: await scenarioFaceID(); break;
+    case 3: await scenarioNBAPush(); break;
+    case 4: await scenarioBrowse(); break;
+    case 5: await scenarioAcceptOffer(); break;
+    case 6: await scenarioOptOut(); break;
+  }
+  scenarioLog('✅ Complete');
+}
+
+async function scenarioAppOpen() {
+  scenarioLog('→ SDK initialised with anonId');
+  await sleep(1500);
+  scenarioLog('→ NexusCDP.trackAppOpen({ platform:"mobile", appVersion:"2.1.0" })');
+  NexusCDP.trackAppOpen({ platform: 'mobile', appVersion: '2.1.0' });
+  addToDrawer('app_open', 'sent');
+  await sleep(1500);
+  scenarioLog('→ Event sent to Collector :3001');
+  await sleep(1500);
+  scenarioLog('→ IH Event Type: MobileSessionStart');
+}
+
+async function scenarioFaceID() {
+  scenarioLog('→ User taps "Sign in with Face ID"');
+  await sleep(1500);
+  scenarioLog('→ NexusCDP.biometricLogin("CUST-ALICE-001", {...})');
+  NexusCDP.biometricLogin('CUST-ALICE-001', { name: 'Alice Smith', tier: 'premium' });
+  addToDrawer('biometric_login', 'sent');
+  await sleep(1500);
+  scenarioLog('→ Identity stitch: anonId → CUST-ALICE-001');
+  addToDrawer('identity_stitch', 'sent');
+  await sleep(1500);
+  scenarioLog('→ Profile merged at Profile Service :3002');
+  await sleep(1500);
+  scenarioLog('→ Navigating to Home screen');
+  closeScenarios();
+  navTo('s-home');
+}
+
+async function scenarioNBAPush() {
+  scenarioLog('→ Requesting NBA decisions from CDH :3010');
+  addToDrawer('nba_request', 'pending');
+  await sleep(1500);
+  scenarioLog('→ NexusCDP.getNBA(callback)');
+  NexusCDP.getNBA(function(err, decisions) {
+    if (!err) {
+      scenarioLog('→ Received decision: home-loan @ 4.2%');
+      showOffer(err, decisions);
+      addToDrawer('offer_view', 'sent');
+    }
+  });
+  await sleep(1500);
+  scenarioLog('→ Offer card rendered on Home screen');
+  await sleep(1000);
+  scenarioLog('→ IH Event Type: NBARequest → OfferImpression');
+  closeScenarios();
+  navTo('s-home');
+}
+
+async function scenarioBrowse() {
+  scenarioLog('→ Navigating to Products screen');
+  closeScenarios();
+  navTo('s-products');
+  await sleep(1500);
+  scenarioLog('→ NexusCDP.track("product_view", { product:"home-loan" })');
+  NexusCDP.track('product_view', { product: 'home-loan', productName: 'Home Loan' }, 'mobile');
+  addToDrawer('product_view', 'sent');
+  await sleep(1500);
+  scenarioLog('→ IH Event Type: ProductInterest captured');
+  await sleep(1500);
+  scenarioLog('→ NexusCDP.track("product_view", { product:"term-deposit" })');
+  NexusCDP.track('product_view', { product: 'term-deposit', productName: 'Term Deposit' }, 'mobile');
+  addToDrawer('product_view', 'sent');
+}
+
+async function scenarioAcceptOffer() {
+  scenarioLog('→ Navigating to Offer Detail');
+  closeScenarios();
+  navTo('s-offer');
+  await sleep(1500);
+  scenarioLog('→ User taps "Accept & Apply"');
+  await sleep(1500);
+  scenarioLog('→ NexusCDP.track("offer_accept", { offer:"home-loan" })');
+  NexusCDP.track('offer_accept', { offer: 'home-loan' }, 'mobile');
+  addToDrawer('offer_accept', 'sent');
+  await sleep(1000);
+  const dId = currentDecisionId || 'dec-demo-001';
+  scenarioLog(`→ NexusCDP.feedback("${dId}", "home-loan-offer", "ACCEPTED")`);
+  NexusCDP.feedback(dId, 'home-loan-offer', 'ACCEPTED', 'mobile');
+  await sleep(1500);
+  scenarioLog('→ IH Event Type: OfferAcceptance + FeedbackRecord');
+  navTo('s-confirm');
+}
+
+async function scenarioOptOut() {
+  scenarioLog('→ User navigates to Marketing Preferences');
+  closeScenarios();
+  navTo('s-profile');
+  await sleep(1500);
+  scenarioLog('→ NexusCDP.optOut(["push","email"])');
+  NexusCDP.optOut(['push', 'email']);
+  addToDrawer('opt_out', 'sent');
+  await sleep(1500);
+  scenarioLog('→ Consent record updated at :3004');
+  await sleep(1000);
+  scenarioLog('→ IH Event Type: ConsentUpdate (GDPR compliant)');
+  showToast('Preferences saved');
+}
+
+/* ─── TOAST ─── */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+/* ─── INITIAL SETUP ─── */
+document.getElementById('tab-bar').style.display = 'none';
+document.getElementById('fab').style.display = 'none';
+</script>
+</body>
+</html>

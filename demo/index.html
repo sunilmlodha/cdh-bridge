@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CDH Bridge Demo Suite — NexusCDP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0F172A;
+      --bg2:       #1E293B;
+      --bg3:       #263148;
+      --accent:    #0063AB;
+      --accent-lt: #1a7fd4;
+      --accent-glow: rgba(0,99,171,0.45);
+      --text:      #F1F5F9;
+      --muted:     #94A3B8;
+      --border:    rgba(255,255,255,0.08);
+      --radius:    14px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0 2rem;
+      height: 64px;
+      background: rgba(15,23,42,0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 700;
+      font-size: 1.1rem;
+      white-space: nowrap;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .nav-logo span.lightning { color: var(--accent); font-size: 1.3rem; }
+
+    .nav-center {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--muted);
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.45rem 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+      border: none;
+      font-family: inherit;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--accent-lt); box-shadow: 0 0 18px var(--accent-glow); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { color: var(--text); border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.04); }
+    .btn-sm { padding: 0.3rem 0.75rem; font-size: 0.78rem; }
+    .btn-full { width: 100%; justify-content: center; }
+
+    /* ── HERO ── */
+    .hero {
+      text-align: center;
+      padding: 5rem 2rem 3rem;
+      background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0,99,171,0.25) 0%, transparent 70%);
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #fff 40%, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 1rem;
+    }
+    .hero p {
+      font-size: 1.15rem;
+      color: var(--muted);
+      max-width: 600px;
+      margin: 0 auto 3rem;
+    }
+
+    .launch-cards {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .launch-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      width: 380px;
+      max-width: 100%;
+      text-align: left;
+      transition: all 0.3s;
+    }
+    .launch-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 40px var(--accent-glow), 0 8px 32px rgba(0,0,0,0.4);
+      transform: translateY(-4px);
+    }
+
+    .card-icon { font-size: 3.5rem; margin-bottom: 1rem; line-height: 1; }
+    .card-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .card-desc { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.25rem; }
+
+    .feature-list {
+      list-style: none;
+      margin-bottom: 1.5rem;
+    }
+    .feature-list li {
+      font-size: 0.85rem;
+      color: #CBD5E1;
+      padding: 0.2rem 0;
+    }
+    .feature-list li::before { content: ''; }
+
+    /* ── STATUS ── */
+    .section { padding: 4rem 2rem; max-width: 1100px; margin: 0 auto; }
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+    .section-subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .status-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .status-top {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      transition: background 0.4s;
+    }
+    .dot-green { background: #22c55e; box-shadow: 0 0 8px rgba(34,197,94,0.6); }
+    .dot-red   { background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.5); }
+    .dot-gray  { background: #475569; }
+    .status-name { font-size: 0.88rem; font-weight: 600; }
+    .status-port { font-size: 0.75rem; color: var(--muted); }
+    .status-metric { font-size: 0.75rem; color: #64748B; margin-top: 0.1rem; min-height: 1em; }
+
+    .status-footer {
+      margin-top: 1rem;
+      font-size: 0.78rem;
+      color: #475569;
+    }
+
+    /* ── SCENARIOS ── */
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .scenario-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--card-color, var(--accent));
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      transition: all 0.25s;
+    }
+    .scenario-card:hover {
+      background: var(--bg3);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+      transform: translateY(-2px);
+    }
+
+    .scenario-icon { font-size: 1.75rem; margin-bottom: 0.75rem; }
+    .scenario-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .scenario-desc { font-size: 0.83rem; color: var(--muted); margin-bottom: 1rem; line-height: 1.55; }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 1.1rem;
+    }
+    .tag {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 99px;
+      background: rgba(255,255,255,0.06);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .scenario-btns { display: flex; gap: 0.5rem; }
+
+    /* ── CODE BLOCK ── */
+    .embed-section {
+      background: linear-gradient(135deg, rgba(0,99,171,0.08), transparent);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .embed-inner { padding: 4rem 2rem; max-width: 760px; margin: 0 auto; }
+    .embed-inner .section-title { text-align: center; margin-bottom: 0.4rem; }
+    .embed-inner .section-subtitle { text-align: center; margin-bottom: 2rem; }
+
+    .code-wrap {
+      position: relative;
+      background: #0a0f1e;
+      border: 1px solid rgba(0,99,171,0.3);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .code-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.6rem 1rem;
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .code-dots { display: flex; gap: 6px; }
+    .code-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .code-dot:nth-child(1) { background: #ff5f57; }
+    .code-dot:nth-child(2) { background: #febc2e; }
+    .code-dot:nth-child(3) { background: #28c840; }
+    .code-lang { font-size: 0.75rem; color: #475569; font-family: monospace; }
+
+    pre {
+      padding: 1.5rem 1.75rem;
+      overflow-x: auto;
+      font-size: 0.88rem;
+      line-height: 1.8;
+    }
+    code { font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace; }
+
+    .c-comment { color: #4B5E6A; }
+    .c-tag     { color: #e06c75; }
+    .c-attr    { color: #98c379; }
+    .c-str     { color: #e5c07b; }
+    .c-fn      { color: #61afef; }
+    .c-obj     { color: #c678dd; }
+    .c-key     { color: #56b6c2; }
+    .c-val     { color: #e5c07b; }
+
+    #copyBtn {
+      margin-top: 1rem;
+      float: right;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.82rem;
+      color: #475569;
+    }
+    footer a { color: var(--muted); text-decoration: none; margin: 0 0.5rem; }
+    footer a:hover { color: var(--text); }
+
+    /* ── UTIL ── */
+    .divider { border: none; border-top: 1px solid var(--border); }
+    .full-width-section { background: var(--bg2); }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav>
+  <a class="nav-logo" href="#">
+    <span class="lightning">⚡</span> NexusCDP
+  </a>
+  <span class="nav-center">CDH Bridge Demo Suite</span>
+  <div class="nav-right">
+    <a class="btn btn-primary btn-sm" href="http://localhost:3000" target="_blank" rel="noopener">Open Dashboard :3000 ↗</a>
+    <a class="btn btn-ghost btn-sm" href="https://github.com/sunilmlodha/cdh-bridge" target="_blank" rel="noopener">GitHub ↗</a>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <h1>Experience CDH Bridge Live</h1>
+  <p>Embed 3 lines of JavaScript. Watch Pega CDH NBA accuracy improve in real-time.</p>
+
+  <div class="launch-cards">
+    <!-- Web Card -->
+    <div class="launch-card">
+      <div class="card-icon">🖥️</div>
+      <div class="card-title">DemoBank Web</div>
+      <div class="card-desc">Desktop banking experience with sidebar navigation</div>
+      <ul class="feature-list">
+        <li>✓ 6 interactive scenarios</li>
+        <li>✓ Live event log panel</li>
+        <li>✓ NBA offer rendering</li>
+        <li>✓ Consent opt-out demo</li>
+      </ul>
+      <a class="btn btn-primary btn-full" href="./web/index.html" target="_blank" rel="noopener">Launch Web Demo →</a>
+    </div>
+
+    <!-- Mobile Card -->
+    <div class="launch-card">
+      <div class="card-icon">📱</div>
+      <div class="card-title">DemoBank Mobile</div>
+      <div class="card-desc">iOS-style mobile banking PWA</div>
+      <ul class="feature-list">
+        <li>✓ Biometric login simulation</li>
+        <li>✓ Push offer simulation</li>
+        <li>✓ Swipe-up events drawer</li>
+        <li>✓ Face ID stitch demo</li>
+      </ul>
+      <a class="btn btn-primary btn-full" href="./mobile/index.html" target="_blank" rel="noopener">Launch Mobile Demo →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── STATUS ── -->
+<div class="full-width-section">
+  <div class="section">
+    <h2 class="section-title">CDH Bridge — Live System Status</h2>
+    <p class="section-subtitle">Polling all services every 5 seconds</p>
+
+    <div class="status-grid" id="statusGrid">
+      <div class="status-card" id="svc-pega">
+        <div class="status-top">
+          <div class="dot dot-gray" id="dot-pega"></div>
+          <div>
+            <div class="status-name">Mock Pega CDH</div>
+            <div class="status-port">:3010</div>
+          </div>
+        </div>
+        <div class="status-metric" id="metric-pega">—</div>
+      </div>
+
+      <div class="status-card" id="svc-collector">
+        <div class="status-top">
+          <div class="dot dot-gray" id="dot-collector"></div>
+          <div>
+            <div class="status-name">Event Collector</div>
+            <div class="status-port">:3001</div>
+          </div>
+        </div>
+        <div class="status-metric" id="metric-collector">—</div>
+      </div>
+
+      <div class="status-card" id="svc-router">
+        <div class="status-top">
+          <div class="dot dot-gray" id="dot-router"></div>
+          <div>
+            <div class="status-name">Profile Router</div>
+            <div class="status-port">:3002</div>
+          </div>
+        </div>
+        <div class="status-metric" id="metric-router">—</div>
+      </div>
+
+      <div class="status-card" id="svc-feedback">
+        <div class="status-top">
+          <div class="dot dot-gray" id="dot-feedback"></div>
+          <div>
+            <div class="status-name">Feedback Loop</div>
+            <div class="status-port">:3003</div>
+          </div>
+        </div>
+        <div class="status-metric" id="metric-feedback">—</div>
+      </div>
+
+      <div class="status-card" id="svc-consent">
+        <div class="status-top">
+          <div class="dot dot-gray" id="dot-consent"></div>
+          <div>
+            <div class="status-name">Consent Service</div>
+            <div class="status-port">:3004</div>
+          </div>
+        </div>
+        <div class="status-metric" id="metric-consent">—</div>
+      </div>
+
+      <div class="status-card" id="svc-connector">
+        <div class="status-top">
+          <div class="dot dot-gray" id="dot-connector"></div>
+          <div>
+            <div class="status-name">Connector Service</div>
+            <div class="status-port">:3005</div>
+          </div>
+        </div>
+        <div class="status-metric" id="metric-connector">—</div>
+      </div>
+
+      <div class="status-card" id="svc-dashboard">
+        <div class="status-top">
+          <div class="dot dot-gray" id="dot-dashboard"></div>
+          <div>
+            <div class="status-name">Dashboard</div>
+            <div class="status-port">:3000</div>
+          </div>
+        </div>
+        <div class="status-metric" id="metric-dashboard">—</div>
+      </div>
+    </div>
+
+    <div class="status-footer" id="statusFooter">Polling…</div>
+  </div>
+</div>
+
+<!-- ── SCENARIOS ── -->
+<div class="section">
+  <h2 class="section-title">Demo Scenarios</h2>
+  <p class="section-subtitle">Click any scenario to launch it directly in the web or mobile demo</p>
+
+  <div class="scenario-grid">
+
+    <div class="scenario-card" style="--card-color:#0063AB">
+      <div class="scenario-icon">🍪</div>
+      <div class="scenario-title">Anonymous Browse</div>
+      <div class="scenario-desc">NexusJS captures page_view and product_view events as anonymous cookieId before login. CDH Bridge builds an anonymous profile in Redis. All events flow to Pega CDH Interaction History.</div>
+      <div class="tags">
+        <span class="tag">anonymous</span>
+        <span class="tag">cookie-tracking</span>
+        <span class="tag">pre-login</span>
+      </div>
+      <div class="scenario-btns">
+        <a class="btn btn-ghost btn-sm" href="./web/index.html?scenario=1" target="_blank" rel="noopener">▶ Run in Web</a>
+        <a class="btn btn-ghost btn-sm" href="./mobile/index.html?scenario=1" target="_blank" rel="noopener">▶ Run in Mobile</a>
+      </div>
+    </div>
+
+    <div class="scenario-card" style="--card-color:#7C3AED">
+      <div class="scenario-icon">🔗</div>
+      <div class="scenario-title">Login &amp; Identity Stitch</div>
+      <div class="scenario-desc">On login, NexusJS fires an event with both cookieId AND customerId. CDH Bridge stitches all pre-login events to the known profile in under 100ms. Pega CDH gains full pre-login context.</div>
+      <div class="tags">
+        <span class="tag">identity</span>
+        <span class="tag">stitch</span>
+        <span class="tag">real-time</span>
+      </div>
+      <div class="scenario-btns">
+        <a class="btn btn-ghost btn-sm" href="./web/index.html?scenario=2" target="_blank" rel="noopener">▶ Run in Web</a>
+        <a class="btn btn-ghost btn-sm" href="./mobile/index.html?scenario=2" target="_blank" rel="noopener">▶ Run in Mobile</a>
+      </div>
+    </div>
+
+    <div class="scenario-card" style="--card-color:#16A34A">
+      <div class="scenario-icon">🎯</div>
+      <div class="scenario-title">NBA Decision</div>
+      <div class="scenario-desc">Dashboard loads, NexusJS calls getNBA(). Mock Pega CDH returns 3 ranked personalised offers. Customer accepts → feedback loops back to update CDH Adaptive Models.</div>
+      <div class="tags">
+        <span class="tag">nba</span>
+        <span class="tag">decisioning</span>
+        <span class="tag">feedback-loop</span>
+      </div>
+      <div class="scenario-btns">
+        <a class="btn btn-ghost btn-sm" href="./web/index.html?scenario=3" target="_blank" rel="noopener">▶ Run in Web</a>
+        <a class="btn btn-ghost btn-sm" href="./mobile/index.html?scenario=3" target="_blank" rel="noopener">▶ Run in Mobile</a>
+      </div>
+    </div>
+
+    <div class="scenario-card" style="--card-color:#0D9488">
+      <div class="scenario-icon">🏠</div>
+      <div class="scenario-title">Product Browse</div>
+      <div class="scenario-desc">Customer views Home Loan product. Event maps to IH.ProductView in CDH Interaction History. Profile shows cross-channel intent. Next NBA reflects accumulated interest signal.</div>
+      <div class="tags">
+        <span class="tag">product-view</span>
+        <span class="tag">cdh-ih</span>
+        <span class="tag">cross-channel</span>
+      </div>
+      <div class="scenario-btns">
+        <a class="btn btn-ghost btn-sm" href="./web/index.html?scenario=4" target="_blank" rel="noopener">▶ Run in Web</a>
+        <a class="btn btn-ghost btn-sm" href="./mobile/index.html?scenario=4" target="_blank" rel="noopener">▶ Run in Mobile</a>
+      </div>
+    </div>
+
+    <div class="scenario-card" style="--card-color:#DC2626">
+      <div class="scenario-icon">🔒</div>
+      <div class="scenario-title">Consent Opt-out</div>
+      <div class="scenario-desc">Customer toggles off marketing. NexusJS calls optOut(). CDH Bridge propagates consent to Pega CDH in under 500ms, suppresses profile, fans out to all 12 connected systems.</div>
+      <div class="tags">
+        <span class="tag">consent</span>
+        <span class="tag">gdpr</span>
+        <span class="tag">compliance</span>
+      </div>
+      <div class="scenario-btns">
+        <a class="btn btn-ghost btn-sm" href="./web/index.html?scenario=5" target="_blank" rel="noopener">▶ Run in Web</a>
+        <a class="btn btn-ghost btn-sm" href="./mobile/index.html?scenario=5" target="_blank" rel="noopener">▶ Run in Mobile</a>
+      </div>
+    </div>
+
+    <div class="scenario-card" style="--card-color:#D97706">
+      <div class="scenario-icon">⚡</div>
+      <div class="scenario-title">Full End-to-End Journey</div>
+      <div class="scenario-desc">Automated 60-second demo: anonymous browse → login stitch → NBA decision → product view → offer acceptance → feedback loop → CDH profile enrichment. Watch all 7 services update.</div>
+      <div class="tags">
+        <span class="tag">end-to-end</span>
+        <span class="tag">automated</span>
+        <span class="tag">all-features</span>
+      </div>
+      <div class="scenario-btns">
+        <a class="btn btn-ghost btn-sm" href="./web/index.html?scenario=6" target="_blank" rel="noopener">▶ Run in Web</a>
+        <a class="btn btn-ghost btn-sm" href="./mobile/index.html?scenario=6" target="_blank" rel="noopener">▶ Run in Mobile</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── EMBED ── -->
+<div class="embed-section">
+  <div class="embed-inner">
+    <h2 class="section-title">Embed in 3 Lines</h2>
+    <p class="section-subtitle">Drop NexusCDP into any site — it auto-maps events to Pega CDH Interaction History schema</p>
+
+    <div class="code-wrap">
+      <div class="code-top-bar">
+        <div class="code-dots">
+          <div class="code-dot"></div>
+          <div class="code-dot"></div>
+          <div class="code-dot"></div>
+        </div>
+        <span class="code-lang">html</span>
+      </div>
+      <pre><code id="codeBlock"><span class="c-comment">&lt;!-- Load NexusCDP SDK --&gt;</span>
+<span class="c-tag">&lt;script</span> <span class="c-attr">src</span>=<span class="c-str">"https://cdn.nexuscdp.io/v1/nexus.js"</span><span class="c-tag">&gt;&lt;/script&gt;</span>
+
+<span class="c-comment">// Initialise</span>
+<span class="c-obj">NexusCDP</span>.<span class="c-fn">init</span>({ <span class="c-key">apiKey</span>: <span class="c-str">'pk_YOUR_KEY'</span> });
+
+<span class="c-comment">// Track events — auto-maps to Pega CDH IH schema</span>
+<span class="c-obj">NexusCDP</span>.<span class="c-fn">track</span>(<span class="c-str">'product_view'</span>, { <span class="c-key">product</span>: <span class="c-str">'home-loan'</span> });
+<span class="c-obj">NexusCDP</span>.<span class="c-fn">identify</span>(<span class="c-str">'CUST-001'</span>, { <span class="c-key">name</span>: <span class="c-str">'Alice Smith'</span> });</code></pre>
+    </div>
+    <button class="btn btn-primary btn-sm" id="copyBtn" onclick="copyCode()">Copy Code</button>
+    <div style="clear:both"></div>
+  </div>
+</div>
+
+<!-- ── FOOTER ── -->
+<footer>
+  CDH Bridge v0.1.0 &nbsp;|&nbsp; Built for Pega CDH integration
+  &nbsp;|&nbsp;
+  <a href="https://github.com/sunilmlodha/cdh-bridge" target="_blank" rel="noopener">GitHub ↗</a>
+  <a href="http://localhost:3000" target="_blank" rel="noopener">Dashboard ↗</a>
+</footer>
+
+<script>
+  /* ── STATUS POLLING ── */
+  const services = [
+    {
+      id: 'pega',
+      name: 'Mock Pega CDH',
+      port: 3010,
+      url: 'http://localhost:3010/health',
+      metric: (d) => d && `Profiles: ${d.profileCount ?? '—'} · NBA: ${d.nbaCount ?? '—'}`
+    },
+    {
+      id: 'collector',
+      name: 'Event Collector',
+      port: 3001,
+      url: 'http://localhost:3001/health',
+      metric: (d) => d && `Kafka: ${d.kafka?.connected ? 'connected' : (d.kafka ? 'disconnected' : '—')}`
+    },
+    {
+      id: 'router',
+      name: 'Profile Router',
+      port: 3002,
+      url: 'http://localhost:3002/health',
+      metric: (d) => d && `Redis: ${d.redis?.status ?? d.redis ?? '—'}`
+    },
+    {
+      id: 'feedback',
+      name: 'Feedback Loop',
+      port: 3003,
+      url: 'http://localhost:3003/health',
+      metric: (d) => d && (d.status ?? 'ok')
+    },
+    {
+      id: 'consent',
+      name: 'Consent Service',
+      port: 3004,
+      url: 'http://localhost:3004/health',
+      metric: (d) => d && (d.status ?? 'ok')
+    },
+    {
+      id: 'connector',
+      name: 'Connector Service',
+      port: 3005,
+      url: 'http://localhost:3005/health',
+      metric: (d) => d && (d.status ?? 'ok')
+    },
+    {
+      id: 'dashboard',
+      name: 'Dashboard',
+      port: 3000,
+      url: 'http://localhost:3000/',
+      metric: () => 'HTTP 200 OK'
+    }
+  ];
+
+  let lastUpdated = null;
+
+  async function checkService(svc) {
+    const dot    = document.getElementById(`dot-${svc.id}`);
+    const metric = document.getElementById(`metric-${svc.id}`);
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 3000);
+      const res = await fetch(svc.url, { signal: controller.signal, mode: 'cors' });
+      clearTimeout(timer);
+
+      dot.className = 'dot dot-green';
+      try {
+        const data = await res.json();
+        const msg = svc.metric(data);
+        metric.textContent = msg || 'up';
+      } catch {
+        metric.textContent = 'up';
+      }
+    } catch (e) {
+      dot.className = 'dot dot-red';
+      metric.textContent = e.name === 'AbortError' ? 'timeout' : 'unreachable';
+    }
+  }
+
+  function fetchStatus() {
+    services.forEach(checkService);
+    lastUpdated = Date.now();
+    document.getElementById('statusFooter').textContent = 'Last updated: just now';
+  }
+
+  // Update "last updated" text
+  setInterval(() => {
+    if (lastUpdated) {
+      const s = Math.round((Date.now() - lastUpdated) / 1000);
+      document.getElementById('statusFooter').textContent =
+        `Last updated: ${s === 0 ? 'just now' : `${s} second${s !== 1 ? 's' : ''} ago`}`;
+    }
+  }, 1000);
+
+  fetchStatus();
+  setInterval(fetchStatus, 5000);
+
+  /* ── COPY CODE ── */
+  function copyCode() {
+    const raw = `<!-- Load NexusCDP SDK -->\n<script src="https://cdn.nexuscdp.io/v1/nexus.js"><\/script>\n\n// Initialise\nNexusCDP.init({ apiKey: 'pk_YOUR_KEY' });\n\n// Track events — auto-maps to Pega CDH IH schema\nNexusCDP.track('product_view', { product: 'home-loan' });\nNexusCDP.identify('CUST-001', { name: 'Alice Smith' });`;
+    navigator.clipboard.writeText(raw).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = 'Copy Code'; }, 2000);
+    }).catch(() => {
+      alert('Copy failed — please select and copy the code manually.');
+    });
+  }
+</script>
+</body>
+</html>
