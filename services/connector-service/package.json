@@ -1,0 +1,23 @@
+{
+  "name": "connector-service",
+  "version": "1.0.0",
+  "description": "CDH Bridge Connector Service - manages 15 pre-built data source connectors",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "NODE_ENV=development node index.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.600.0",
+    "axios": "^1.7.2",
+    "cors": "^2.8.5",
+    "csv-parse": "^5.5.6",
+    "express": "^4.19.2",
+    "ioredis": "^5.4.1",
+    "kafkajs": "^2.2.4",
+    "node-cron": "^3.0.3",
+    "uuid": "^10.0.0",
+    "winston": "^3.13.0"
+  }
+}

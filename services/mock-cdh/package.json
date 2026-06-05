@@ -1,0 +1,19 @@
+{
+  "name": "mock-cdh",
+  "version": "0.1.0",
+  "description": "Mock Pega CDH REST API for local development and CI",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "ws": "^8.17.0",
+    "uuid": "^9.0.1",
+    "winston": "^3.13.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

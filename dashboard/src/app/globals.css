@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+html {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.sidebar-link {
+  @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 text-blue-100 hover:bg-white/10 hover:text-white;
+}
+
+.sidebar-link.active {
+  @apply bg-white/20 text-white;
+}
+
+.card {
+  @apply bg-white rounded-xl shadow-sm border border-gray-100 p-6;
+}
+
+.btn-primary {
+  @apply bg-pega-blue text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-pega-dark transition-colors duration-150;
+}
+
+.btn-secondary {
+  @apply bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors duration-150;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes scroll-up {
+  from { transform: translateY(0); }
+  to { transform: translateY(-100%); }
+}
+
+.live-feed-row {
+  @apply border-b border-gray-50 py-2 px-1 text-xs text-gray-600 hover:bg-gray-50 transition-colors;
+}

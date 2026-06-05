@@ -1,0 +1,304 @@
+
+# ---------------------------------------------------------------------------
+# CDH Bridge — Full Stack Docker Compose
+# ---------------------------------------------------------------------------
+# Start everything:  docker-compose up
+# Start detached:    docker-compose up -d
+# Tear down:         docker-compose down -v
+# ---------------------------------------------------------------------------
+
+x-service-defaults: &service-defaults
+  restart: unless-stopped
+  env_file: .env
+  networks:
+    - cdh-net
+
+x-app-healthcheck: &app-healthcheck
+  interval: 15s
+  timeout: 5s
+  retries: 5
+  start_period: 30s
+
+services:
+
+  # --------------------------------------------------------------------------
+  # Infrastructure: ZooKeeper (required by Kafka 3.x in KRaft-less mode)
+  # --------------------------------------------------------------------------
+  zookeeper:
+    <<: *service-defaults
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: cdh-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo ruok | ncat localhost 2181 2>/dev/null | grep -q imok || echo ruok | /bin/nc localhost 2181 2>/dev/null | grep -q imok || exit 0"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # --------------------------------------------------------------------------
+  # Infrastructure: Kafka
+  # --------------------------------------------------------------------------
+  kafka:
+    <<: *service-defaults
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: cdh-kafka
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG4J_LOGGERS: "kafka=WARN,kafka.controller=WARN,kafka.log.LogCleaner=WARN,state.change.logger=WARN,kafka.producer.async.DefaultEventHandler=WARN"
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      <<: *app-healthcheck
+
+  # --------------------------------------------------------------------------
+  # Infrastructure: Redis
+  # --------------------------------------------------------------------------
+  redis:
+    <<: *service-defaults
+    image: redis:7-alpine
+    container_name: cdh-redis
+    command: redis-server --loglevel warning --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      <<: *app-healthcheck
+
+  # --------------------------------------------------------------------------
+  # Mock Pega CDH (for local dev / CI)
+  # --------------------------------------------------------------------------
+  mock-cdh:
+    <<: *service-defaults
+    build:
+      context: ./services/mock-cdh
+      dockerfile: Dockerfile
+    container_name: cdh-mock-cdh
+    ports:
+      - "3010:3010"
+    environment:
+      PORT: "3010"
+      NODE_ENV: development
+      LOG_LEVEL: info
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3010/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      <<: *app-healthcheck
+
+  # --------------------------------------------------------------------------
+  # Service: event-collector (port 3001)
+  # --------------------------------------------------------------------------
+  event-collector:
+    <<: *service-defaults
+    build:
+      context: ./services/event-collector
+      dockerfile: Dockerfile
+    container_name: cdh-event-collector
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: "3001"
+      KAFKA_BROKERS: kafka:9092
+      REDIS_URL: redis://redis:6379
+      PEGA_CDH_URL: http://mock-cdh:3010
+      PEGA_CDH_AUTH_TOKEN: ${PEGA_CDH_AUTH_TOKEN:-dev-token-replace-in-prod}
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-replace-in-prod}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      NODE_ENV: ${NODE_ENV:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mock-cdh:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3001/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      <<: *app-healthcheck
+
+  # --------------------------------------------------------------------------
+  # Service: profile-router (port 3002)
+  # --------------------------------------------------------------------------
+  profile-router:
+    <<: *service-defaults
+    build:
+      context: ./services/profile-router
+      dockerfile: Dockerfile
+    container_name: cdh-profile-router
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: "3002"
+      KAFKA_BROKERS: kafka:9092
+      REDIS_URL: redis://redis:6379
+      PEGA_CDH_URL: http://mock-cdh:3010
+      PEGA_CDH_AUTH_TOKEN: ${PEGA_CDH_AUTH_TOKEN:-dev-token-replace-in-prod}
+      NODE_ENV: ${NODE_ENV:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mock-cdh:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3002/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      <<: *app-healthcheck
+
+  # --------------------------------------------------------------------------
+  # Service: feedback-loop (port 3003)
+  # --------------------------------------------------------------------------
+  feedback-loop:
+    <<: *service-defaults
+    build:
+      context: ./services/feedback-loop
+      dockerfile: Dockerfile
+    container_name: cdh-feedback-loop
+    ports:
+      - "3003:3003"
+    environment:
+      PORT: "3003"
+      KAFKA_BROKERS: kafka:9092
+      REDIS_URL: redis://redis:6379
+      PEGA_CDH_URL: http://mock-cdh:3010
+      PEGA_CDH_AUTH_TOKEN: ${PEGA_CDH_AUTH_TOKEN:-dev-token-replace-in-prod}
+      NODE_ENV: ${NODE_ENV:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mock-cdh:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3003/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      <<: *app-healthcheck
+
+  # --------------------------------------------------------------------------
+  # Service: consent-service (port 3004)
+  # --------------------------------------------------------------------------
+  consent-service:
+    <<: *service-defaults
+    build:
+      context: ./services/consent-service
+      dockerfile: Dockerfile
+    container_name: cdh-consent-service
+    ports:
+      - "3004:3004"
+    environment:
+      PORT: "3004"
+      KAFKA_BROKERS: kafka:9092
+      REDIS_URL: redis://redis:6379
+      PEGA_CDH_URL: http://mock-cdh:3010
+      PEGA_CDH_AUTH_TOKEN: ${PEGA_CDH_AUTH_TOKEN:-dev-token-replace-in-prod}
+      NODE_ENV: ${NODE_ENV:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mock-cdh:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3004/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      <<: *app-healthcheck
+
+  # --------------------------------------------------------------------------
+  # Service: connector-service (port 3005)
+  # --------------------------------------------------------------------------
+  connector-service:
+    <<: *service-defaults
+    build:
+      context: ./services/connector-service
+      dockerfile: Dockerfile
+    container_name: cdh-connector-service
+    ports:
+      - "3005:3005"
+    environment:
+      PORT: "3005"
+      KAFKA_BROKERS: kafka:9092
+      REDIS_URL: redis://redis:6379
+      PEGA_CDH_URL: http://mock-cdh:3010
+      PEGA_CDH_AUTH_TOKEN: ${PEGA_CDH_AUTH_TOKEN:-dev-token-replace-in-prod}
+      NODE_ENV: ${NODE_ENV:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mock-cdh:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3005/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      <<: *app-healthcheck
+
+  # --------------------------------------------------------------------------
+  # Dashboard (port 3000)
+  # --------------------------------------------------------------------------
+  dashboard:
+    <<: *service-defaults
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    container_name: cdh-dashboard
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: "3000"
+      NODE_ENV: ${NODE_ENV:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      NEXT_PUBLIC_EVENT_COLLECTOR_URL: http://localhost:3001
+      NEXT_PUBLIC_MOCK_CDH_URL: http://localhost:3010
+    depends_on:
+      - event-collector
+      - profile-router
+      - feedback-loop
+      - consent-service
+      - connector-service
+      - mock-cdh
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))"]
+      <<: *app-healthcheck
+
+# ---------------------------------------------------------------------------
+# Volumes
+# ---------------------------------------------------------------------------
+volumes:
+  zookeeper_data:
+    driver: local
+  kafka_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# ---------------------------------------------------------------------------
+# Networks
+# ---------------------------------------------------------------------------
+networks:
+  cdh-net:
+    driver: bridge

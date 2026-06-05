@@ -1,0 +1,21 @@
+{
+  "name": "cdh-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CDH Bridge — Real-time data pipeline for Pega CDH",
+  "workspaces": [
+    "services/*",
+    "dashboard"
+  ],
+  "scripts": {
+    "dev": "docker-compose up",
+    "build": "npm run build --workspaces",
+    "start": "docker-compose up -d",
+    "stop": "docker-compose down",
+    "test": "npm run test --workspaces --if-present",
+    "logs": "docker-compose logs -f"
+  },
+  "dependencies": {
+    "axios": "^1.17.0"
+  }
+}

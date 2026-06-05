@@ -1,0 +1,20 @@
+{
+  "name": "profile-router",
+  "version": "1.0.0",
+  "description": "Unified customer profile router for Pega CDH",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.2",
+    "cors": "^2.8.5",
+    "cron": "^3.1.7",
+    "express": "^4.19.2",
+    "ioredis": "^5.4.1",
+    "kafkajs": "^2.2.4",
+    "uuid": "^10.0.0",
+    "winston": "^3.13.0"
+  }
+}
