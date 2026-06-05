@@ -23,6 +23,8 @@ const nextConfig = {
       // Consent service (port 3004)
       { source: '/api/consent/:path*',    destination: `${base}:3004/v1/consent/:path*` },
       { source: '/api/audit/:path*',      destination: `${base}:3004/v1/consent/audit/:path*` },
+      // Identity resolution (port 3002)
+      { source: '/api/identity/:path*',   destination: `${base}:3002/v1/identity/:path*` },
       // Health
       { source: '/api/health',            destination: `${base}:3001/health` },
     ]

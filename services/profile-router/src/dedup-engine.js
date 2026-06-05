@@ -1,17 +1,33 @@
 'use strict';
 
-const logger = require('./logger');
-const store = require('./profile-store');
+/**
+ * dedup-engine.js — thin compatibility wrapper around the identity match-engine.
+ *
+ * The original three-method API (matchByEmail, matchByPhone, matchById, mergeProfiles)
+ * is preserved for backward compatibility. New callers should use findBestMatch and
+ * resolveIdentity from this module or import match-engine directly.
+ */
+
+const logger      = require('./logger');
+const store       = require('./profile-store');
+const matchEngine = require('./identity/match-engine');
+const { applySurvivorshipRules } = require('./identity/survivorship-rules');
+
+// ─── Backward-compatible API ──────────────────────────────────────────────────
 
 /**
  * Find an existing profile by email address.
  * Returns the profile or null.
+ *
+ * @param {string} email
+ * @returns {Promise<object|null>}
  */
 async function matchByEmail(email) {
   if (!email) return null;
   const client = store.getClient();
+  const { normaliseEmail } = require('./identity/confidence-scorer');
   try {
-    const customerId = await client.get(store.emailIndexKey(email));
+    const customerId = await client.get(store.emailIndexKey(normaliseEmail(email)));
     if (!customerId) return null;
     return store.get(customerId);
   } catch (err) {
@@ -23,12 +39,16 @@ async function matchByEmail(email) {
 /**
  * Find an existing profile by phone number.
  * Returns the profile or null.
+ *
+ * @param {string} phone
+ * @returns {Promise<object|null>}
  */
 async function matchByPhone(phone) {
   if (!phone) return null;
   const client = store.getClient();
+  const { normalisePhone } = require('./identity/confidence-scorer');
   try {
-    const customerId = await client.get(store.phoneIndexKey(phone));
+    const customerId = await client.get(store.phoneIndexKey(normalisePhone(phone)));
     if (!customerId) return null;
     return store.get(customerId);
   } catch (err) {
@@ -39,6 +59,9 @@ async function matchByPhone(phone) {
 
 /**
  * Direct lookup by customerId.
+ *
+ * @param {string} customerId
+ * @returns {Promise<object|null>}
  */
 async function matchById(customerId) {
   if (!customerId) return null;
@@ -46,91 +69,72 @@ async function matchById(customerId) {
 }
 
 /**
- * Merge two profiles into one unified profile.
- * - Keeps primary.customerId
- * - Merges array fields (segments, sources) as union
- * - Takes latest scalar values (secondary fields fill gaps in primary)
- * - Consent: most restrictive wins (false beats true)
- * - Records secondary.customerId in mergedIds list
+ * Merge two profiles into one unified profile using survivorship rules.
+ * Keeps primary.customerId. Returns the merged profile object (does NOT persist).
+ *
+ * For persistence, use deduplicateAndMerge which also updates indexes.
+ *
+ * @param {object} primary
+ * @param {object} secondary
+ * @returns {object}
  */
 function mergeProfiles(primary, secondary) {
   if (!primary || !secondary) {
     return primary || secondary;
   }
 
-  const result = { ...primary };
-
-  // Merge scalar fields: secondary fills in missing fields only (primary wins if set)
-  const SCALAR_FIELDS = [
-    'firstName', 'lastName', 'email', 'phone', 'dateOfBirth',
-    'address', 'city', 'state', 'country', 'postalCode',
-    'ltv', 'tier', 'language', 'currency',
-  ];
-
-  for (const field of SCALAR_FIELDS) {
-    if ((result[field] === undefined || result[field] === null) && secondary[field] != null) {
-      result[field] = secondary[field];
-    }
-  }
-
-  // Merge updatedAt: keep the most recent
-  const primaryUpdated = result.updatedAt ? new Date(result.updatedAt) : new Date(0);
-  const secondaryUpdated = secondary.updatedAt ? new Date(secondary.updatedAt) : new Date(0);
-  if (secondaryUpdated > primaryUpdated) {
-    // For scalar fields that secondary is newer, prefer secondary values
-    for (const field of SCALAR_FIELDS) {
-      if (secondary[field] != null) {
-        result[field] = secondary[field];
-      }
-    }
-    result.updatedAt = secondary.updatedAt;
-  }
-
-  // Merge array fields: union
-  const ARRAY_FIELDS = ['segments', 'sources', 'tags', 'interactionHistory'];
-  for (const field of ARRAY_FIELDS) {
-    const arr1 = Array.isArray(primary[field]) ? primary[field] : [];
-    const arr2 = Array.isArray(secondary[field]) ? secondary[field] : [];
-    // For arrays of objects (like interactionHistory), just concat; for primitives, dedup
-    if (arr1.length > 0 && typeof arr1[0] === 'object') {
-      result[field] = [...arr1, ...arr2];
-    } else {
-      result[field] = [...new Set([...arr1, ...arr2])];
-    }
-  }
-
-  // Consent: most restrictive wins
-  const primaryConsent = primary.consent || {};
-  const secondaryConsent = secondary.consent || {};
-  const mergedConsent = { ...primaryConsent };
-  for (const [key, val] of Object.entries(secondaryConsent)) {
-    if (mergedConsent[key] === undefined) {
-      mergedConsent[key] = val;
-    } else {
-      // false is more restrictive — it wins
-      mergedConsent[key] = mergedConsent[key] === false || val === false ? false : val;
-    }
-  }
-  result.consent = mergedConsent;
+  const merged = applySurvivorshipRules([primary, secondary]);
+  merged.customerId = primary.customerId;
+  merged.goldenId   = primary.customerId;
 
   // Track merged IDs for audit trail
   const existingMergedIds = Array.isArray(primary.mergedIds) ? primary.mergedIds : [];
-  result.mergedIds = [...new Set([...existingMergedIds, secondary.customerId])].filter(Boolean);
+  merged.mergedIds = [...new Set([...existingMergedIds, secondary.customerId])].filter(Boolean);
+  merged.mergedAt  = new Date().toISOString();
 
-  result.customerId = primary.customerId; // Always keep primary ID
-  result.mergedAt = new Date().toISOString();
-
-  logger.info('Profiles merged', {
-    primaryId: primary.customerId,
+  logger.info('Profiles merged (legacy)', {
+    primaryId:   primary.customerId,
     secondaryId: secondary.customerId,
   });
 
-  return result;
+  return merged;
 }
 
+// ─── New identity resolution API (delegates to match-engine) ──────────────────
+
+/**
+ * Find the best matching existing profile for an incoming profile fragment.
+ *
+ * @param {object} incomingProfile
+ * @returns {Promise<{ match: object|null, action: string, confidence: number, reviewId?: string }>}
+ */
+const findBestMatch = matchEngine.findBestMatch;
+
+/**
+ * Walk the identity alias graph to find the golden customerId for any identifier.
+ *
+ * @param {string} anyIdentifier
+ * @returns {Promise<string|null>}
+ */
+const resolveIdentity = matchEngine.resolveIdentity;
+
+/**
+ * Merge two profiles by ID, applying survivorship rules and updating all indexes.
+ *
+ * @param {string} primaryId
+ * @param {string} secondaryId
+ * @returns {Promise<object>}
+ */
+const deduplicateAndMerge = matchEngine.deduplicateAndMerge;
+
 module.exports = {
+  // Legacy API (backward compatible)
   matchByEmail,
   matchByPhone,
   matchById,
   mergeProfiles,
+  // New identity resolution API
+  findBestMatch,
+  resolveIdentity,
+  deduplicateAndMerge,
 };

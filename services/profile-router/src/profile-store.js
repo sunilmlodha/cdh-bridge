@@ -44,6 +44,14 @@ function phoneIndexKey(phone) {
   return `idx:phone:${phone.replace(/\D/g, '')}`;
 }
 
+// Composite fuzzy index: lastName + postalCode (for probabilistic name matching)
+// Returns a SET key — multiple customers can share this bucket
+function namePcIndexKey(lastName, postalCode) {
+  const ln = String(lastName || '').toLowerCase().replace(/\s/g,'')
+  const pc = String(postalCode || '').replace(/\s/g,'').toLowerCase()
+  return `idx:namepc:${ln}:${pc}`
+}
+
 /**
  * Record a latency sample (in ms) for percentile tracking.
  */
@@ -96,6 +104,12 @@ async function set(customerId, profile) {
   // Maintain phone index
   if (data.phone) {
     pipeline.set(phoneIndexKey(data.phone), customerId, 'EX', PROFILE_TTL_SECONDS);
+  }
+  // Maintain name+postalCode bucket index (SET — multiple customers per bucket)
+  if (data.lastName && data.postalCode) {
+    const npcKey = namePcIndexKey(data.lastName, data.postalCode)
+    pipeline.sadd(npcKey, customerId)
+    pipeline.expire(npcKey, PROFILE_TTL_SECONDS)
   }
 
   await pipeline.exec();
@@ -249,5 +263,16 @@ module.exports = {
   getHistory,
   emailIndexKey,
   phoneIndexKey,
+  namePcIndexKey,
   getClient,
+
+  /** Look up all customerIds in the name+postalCode bucket */
+  async lookupByNamePc(lastName, postalCode) {
+    if (!lastName || !postalCode) return []
+    const client = getClient()
+    const key = namePcIndexKey(lastName, postalCode)
+    const ids = await client.smembers(key)
+    const profiles = await Promise.all(ids.map(id => get(id)))
+    return profiles.filter(Boolean)
+  },
 };

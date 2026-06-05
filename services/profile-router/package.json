@@ -16,5 +16,8 @@
     "kafkajs": "^2.2.4",
     "uuid": "^10.0.0",
     "winston": "^3.13.0"
+  },
+  "devDependencies": {
+    "jest": "^30.4.2"
   }
 }

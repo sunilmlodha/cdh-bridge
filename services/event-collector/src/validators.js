@@ -13,7 +13,9 @@ const propertiesSchema = Joi.object().pattern(
 ).max(50);
 
 const singleEventSchema = Joi.object({
-  customerId: Joi.string().trim().min(1).max(255).required(),
+  // customerId OR cookieId required — anonymous events only have cookieId
+  customerId: Joi.string().trim().min(1).max(255).optional(),
+  cookieId:   Joi.string().trim().min(1).max(512).optional(),
   eventType: Joi.string().trim().min(1).max(100).required(),
   channel: Joi.string()
     .trim()
@@ -30,7 +32,9 @@ const singleEventSchema = Joi.object({
   deviceId: Joi.string().trim().max(255).optional(),
   ipAddress: Joi.string().ip({ version: ['ipv4', 'ipv6'], cidr: 'optional' }).optional(),
   userAgent: Joi.string().trim().max(512).optional(),
-}).options({ stripUnknown: true });
+})
+.or('customerId', 'cookieId')  // at least one identifier required
+.options({ stripUnknown: true });
 
 const batchEventSchema = Joi.object({
   events: Joi.array()

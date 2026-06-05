@@ -66,6 +66,45 @@ app.get('/health', async (req, res) => {
 // Profile routes
 app.use('/v1/profiles', profileRoutes);
 
+// Identity resolution routes — extract identity sub-routes from profiles router
+// and also mount directly at /v1/identity for clean API surface
+const identityRouter = require('express').Router();
+const profileRoutesRef = require('./src/routes/profiles');
+
+// Re-mount identity sub-paths at /v1/identity
+const reviewQueue      = require('./src/identity/review-queue');
+const anonymousStitcher = require('./src/identity/anonymous-stitcher');
+const deviceLinker     = require('./src/identity/device-linker');
+const identityGraph    = require('./src/identity/identity-graph');
+const aliasManager     = require('./src/identity/alias-manager');
+const matchEngine      = require('./src/identity/match-engine');
+
+// Review queue
+identityRouter.get('/review/stats',            async (req, res) => { try { res.json(await reviewQueue.getStats()) } catch(e) { res.status(500).json({error:e.message}) } })
+identityRouter.get('/review/queue',            async (req, res) => { try { res.json(await reviewQueue.getPending(Number(req.query.limit)||50)) } catch(e) { res.status(500).json({error:e.message}) } })
+identityRouter.get('/review/:id',              async (req, res) => { try { const item = await reviewQueue.getItem(req.params.id); item ? res.json(item) : res.status(404).json({error:'Not found'}) } catch(e) { res.status(500).json({error:e.message}) } })
+identityRouter.post('/review/:id/approve',     async (req, res) => { try { const r = await reviewQueue.approve(req.params.id, req.body.resolvedBy||'api'); const merged = await matchEngine.deduplicateAndMerge(r.primaryId, r.secondaryId); res.json({merged:true, goldenId:r.primaryId, merged_profile:merged}) } catch(e) { res.status(500).json({error:e.message}) } })
+identityRouter.post('/review/:id/reject',      async (req, res) => { try { await reviewQueue.reject(req.params.id, req.body.resolvedBy||'api'); res.json({rejected:true}) } catch(e) { res.status(500).json({error:e.message}) } })
+
+// Anonymous stitching
+identityRouter.post('/stitch',                 async (req, res) => { try { const { cookieId, customerId, source } = req.body; if (!cookieId||!customerId) return res.status(400).json({error:'cookieId and customerId required'}); const r = await anonymousStitcher.stitchToKnown(cookieId, customerId, source||'api'); res.json(r) } catch(e) { res.status(500).json({error:e.message}) } })
+identityRouter.get('/stitch/stats',            async (req, res) => { try { res.json(await anonymousStitcher.getStitchStats()) } catch(e) { res.status(500).json({error:e.message}) } })
+identityRouter.get('/anon/:cookieId',          async (req, res) => { try { const p = await anonymousStitcher.getAnon(req.params.cookieId); if (!p) return res.status(404).json({error:'Anonymous profile not found or already stitched', cookieId:req.params.cookieId}); res.json({cookieId:req.params.cookieId, eventCount:p.events?.length||0, segments:p.segments||[], createdAt:p.createdAt, lastSeenAt:p.lastSeenAt}) } catch(e) { res.status(500).json({error:e.message}) } })
+identityRouter.post('/anon/:cookieId/event',   async (req, res) => { try { const p = await anonymousStitcher.trackAnonEvent(req.params.cookieId, req.body); res.json({tracked:true, eventCount:p.events?.length||0, segments:p.segments||[]}) } catch(e) { res.status(500).json({error:e.message}) } })
+identityRouter.get('/anon/count',              async (req, res) => { try { res.json({count: await anonymousStitcher.getAnonCount()}) } catch(e) { res.status(500).json({error:e.message}) } })
+
+// Device / identity graph
+identityRouter.post('/device/register',        async (req, res) => { try { const { customerId, deviceId, deviceType, metadata } = req.body; if (!customerId||!deviceId) return res.status(400).json({error:'customerId and deviceId required'}); await deviceLinker.registerDevice(customerId, deviceId, deviceType||'web-cookie', metadata||{}); res.json({registered:true, customerId, deviceId}) } catch(e) { res.status(500).json({error:e.message}) } })
+identityRouter.get('/device/:deviceId',        async (req, res) => { try { const cid = await deviceLinker.resolveDevice(req.params.deviceId); cid ? res.json({deviceId:req.params.deviceId, customerId:cid}) : res.status(404).json({error:'Device not found'}) } catch(e) { res.status(500).json({error:e.message}) } })
+
+// Identity cluster (full picture of all linked identifiers for a customer)
+identityRouter.get('/cluster/:identifier',     async (req, res) => { try { const golden = await aliasManager.resolve(req.params.identifier); const cluster = await identityGraph.getIdentityCluster(golden||req.params.identifier); res.json({...cluster, resolvedFrom:req.params.identifier}) } catch(e) { res.status(500).json({error:e.message}) } })
+
+// Graph stats
+identityRouter.get('/stats',                   async (req, res) => { try { const [graphStats, reviewStats, stitchStats] = await Promise.all([identityGraph.getStats(), reviewQueue.getStats(), anonymousStitcher.getStitchStats()]); res.json({ graph: graphStats, reviews: reviewStats, stitches: stitchStats }) } catch(e) { res.status(500).json({error:e.message}) } })
+
+app.use('/v1/identity', identityRouter);
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: 'Not found', path: req.originalUrl });

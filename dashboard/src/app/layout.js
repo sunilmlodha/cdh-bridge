@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 import {
-  LayoutDashboard, Plug, Users, Zap, Target, RefreshCw, Shield, FileText, Settings, ChevronRight
+  LayoutDashboard, Plug, Users, Zap, Target, RefreshCw, Shield, FileText, Settings, ChevronRight, Link2
 } from 'lucide-react';
 import './globals.css';
 
@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/connectors', label: 'Connectors', icon: Plug },
   { href: '/profiles', label: 'Profiles', icon: Users },
+  { href: '/identity', label: 'Identity', icon: Link2 },
   { href: '/events', label: 'Events', icon: Zap },
   { href: '/segments', label: 'Segments', icon: Target },
   { href: '/nba', label: 'NBA Decisions', icon: ChevronRight },
