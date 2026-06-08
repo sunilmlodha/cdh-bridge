@@ -1,0 +1,10 @@
+{
+  "name": "cdh-bridge-dashboard",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "installCommand": "npm install --legacy-peer-deps",
+  "env": {
+    "SERVICES_BASE_URL": "https://cdh-bridge-api.up.railway.app"
+  }
+}

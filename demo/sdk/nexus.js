@@ -11,15 +11,26 @@
   // ---------------------------------------------------------------------------
   // Internal state
   // ---------------------------------------------------------------------------
+  // Auto-detect backend URL: use Railway in production, localhost in dev
+  var _backendBase = (function() {
+    if (typeof window !== 'undefined' && window.NEXUS_BACKEND_URL) return window.NEXUS_BACKEND_URL;
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      // Running on Vercel — use Railway backend if configured, else stub mode
+      return window.NEXUS_RAILWAY_URL || '__STUB__';
+    }
+    return 'http://localhost';
+  })();
+
   var _config = {
     apiKey: '',
-    collectorUrl: 'http://localhost:3001',
-    profileUrl: 'http://localhost:3002',
-    cdhUrl: 'http://localhost:3010',
-    feedbackUrl: 'http://localhost:3003',
-    consentUrl: 'http://localhost:3004',
+    collectorUrl: _backendBase === '__STUB__' ? '__STUB__' : (_backendBase + ':3001'),
+    profileUrl:   _backendBase === '__STUB__' ? '__STUB__' : (_backendBase + ':3002'),
+    cdhUrl:       _backendBase === '__STUB__' ? '__STUB__' : (_backendBase + ':3010'),
+    feedbackUrl:  _backendBase === '__STUB__' ? '__STUB__' : (_backendBase + ':3003'),
+    consentUrl:   _backendBase === '__STUB__' ? '__STUB__' : (_backendBase + ':3004'),
     debug: false,
-    autoTrack: true
+    autoTrack: true,
+    stubMode: _backendBase === '__STUB__'
   };
 
   var _state = {
