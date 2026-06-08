@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Citadele Banka — Internet Banking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green: #00B140;
+    --green-dark: #006827;
+    --green-light: #E8F7EE;
+    --orange: #FF6B00;
+    --white: #FFFFFF;
+    --text-dark: #1A1A1A;
+    --text-gray: #666666;
+    --bg: #F5F5F5;
+    --border: #E0E0E0;
+    --sidebar-w: 240px;
+  }
+
+  body {
+    font-family: "Aktiv Grotesk", "Inter", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text-dark);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ── CITADELE LOGO ── */
+  .citadele-logo {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    user-select: none;
+  }
+  .citadele-logo .logo-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .citadele-logo .logo-diamond {
+    width: 10px;
+    height: 10px;
+    background: var(--green);
+    transform: rotate(45deg);
+    flex-shrink: 0;
+  }
+  .citadele-logo .logo-name {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--green-dark);
+    letter-spacing: -0.3px;
+  }
+  .citadele-logo .logo-tagline {
+    font-size: 11px;
+    color: var(--text-gray);
+    padding-left: 18px;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── LOGIN PAGE ── */
+  #p-login {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f0faf4 0%, #e8f7ee 50%, #f0faf4 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  #p-login::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle at 20% 50%, rgba(0,177,64,0.06) 0%, transparent 50%),
+                      radial-gradient(circle at 80% 20%, rgba(0,104,39,0.04) 0%, transparent 40%);
+    pointer-events: none;
+  }
+  .login-card {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 48px 40px;
+    width: 420px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+    position: relative;
+    z-index: 1;
+  }
+  .login-card .citadele-logo { margin-bottom: 32px; }
+  .login-card h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--green-dark);
+    margin-bottom: 6px;
+  }
+  .login-card .subtitle {
+    font-size: 13px;
+    color: var(--text-gray);
+    margin-bottom: 28px;
+  }
+  .form-group { margin-bottom: 16px; }
+  .form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-gray);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .form-group input {
+    width: 100%;
+    height: 48px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 0 14px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text-dark);
+    background: #fafafa;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus { border-color: var(--green); background: var(--white); }
+  .btn-primary {
+    width: 100%;
+    height: 48px;
+    background: var(--green);
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    margin-top: 8px;
+  }
+  .btn-primary:hover { background: #009e38; }
+  .btn-primary:active { transform: scale(0.99); }
+  .guest-link {
+    display: block;
+    text-align: center;
+    margin-top: 14px;
+    color: var(--green);
+    font-size: 13px;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .guest-link:hover { text-decoration: underline; }
+  .demo-badge {
+    display: block;
+    text-align: center;
+    margin-top: 24px;
+    font-size: 11px;
+    color: #aaa;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+
+  /* ── APP SHELL ── */
+  #p-app { display: none; min-height: 100vh; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    width: var(--sidebar-w);
+    background: var(--white);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+  }
+  .sidebar-header {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-header .citadele-logo .logo-name { font-size: 20px; }
+  .sidebar-ib {
+    font-size: 11px;
+    color: var(--text-gray);
+    margin-top: 4px;
+    padding-left: 18px;
+    letter-spacing: 0.3px;
+  }
+  .sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 20px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-gray);
+    border-left: 3px solid transparent;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .nav-item:hover { background: var(--green-light); color: var(--green-dark); }
+  .nav-item.active {
+    background: var(--green-light);
+    color: var(--green-dark);
+    border-left-color: var(--green);
+    font-weight: 600;
+  }
+  .nav-item .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+  .nav-badge {
+    margin-left: auto;
+    background: var(--orange);
+    color: var(--white);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 10px;
+  }
+  .sidebar-footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+  }
+  .user-info { margin-bottom: 10px; }
+  .user-name { font-size: 13px; font-weight: 600; color: var(--text-dark); }
+  .user-tier { font-size: 11px; color: var(--text-gray); margin-top: 1px; }
+  .btn-logout {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-gray);
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: inherit;
+    padding: 4px 0;
+  }
+  .btn-logout:hover { color: #c0392b; }
+
+  /* ── MAIN CONTENT ── */
+  .main-content {
+    margin-left: var(--sidebar-w);
+    padding: 0 0 120px 0;
+    min-height: 100vh;
+  }
+  .page-section { display: none; }
+  .page-section.active { display: block; }
+
+  /* ── OVERVIEW ── */
+  .overview-header {
+    background: linear-gradient(135deg, var(--green-dark) 0%, #008a32 100%);
+    padding: 32px 32px 28px;
+    color: var(--white);
+  }
+  .overview-header h2 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .overview-header p { font-size: 14px; opacity: 0.8; }
+  .overview-body { padding: 28px 32px; }
+
+  /* Stats */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--white);
+    border-radius: 10px;
+    padding: 20px;
+    border-left: 4px solid var(--green);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+  .stat-card.rewards { border-left-color: var(--orange); }
+  .stat-label { font-size: 11px; font-weight: 600; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.4px; }
+  .stat-value { font-size: 22px; font-weight: 700; color: var(--text-dark); margin-top: 6px; }
+  .stat-value.orange { color: var(--orange); }
+  .stat-sub { font-size: 11px; color: var(--text-gray); margin-top: 3px; }
+
+  /* NBA Zone */
+  #nba-zone { margin-bottom: 28px; }
+  .nba-loading {
+    background: linear-gradient(135deg, var(--green) 0%, #009e38 100%);
+    border-radius: 12px;
+    padding: 24px 28px;
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .nba-loading .spinner {
+    width: 28px; height: 28px;
+    border: 3px solid rgba(255,255,255,0.3);
+    border-top-color: var(--white);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .nba-loading .loading-text { font-size: 15px; font-weight: 600; }
+  .nba-loading .loading-sub { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+
+  .nba-offer {
+    background: var(--white);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,177,64,0.12);
+    border: 1.5px solid rgba(0,177,64,0.2);
+  }
+  .nba-offer-header {
+    background: linear-gradient(135deg, var(--green) 0%, #009e38 100%);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--white);
+  }
+  .nba-offer-header .offer-title { font-size: 14px; font-weight: 700; }
+  .nba-offer-header .offer-icon { font-size: 22px; }
+  .propensity-badge {
+    background: var(--orange);
+    color: var(--white);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+  .nba-offer-body { padding: 20px 24px; }
+  .offer-name { font-size: 18px; font-weight: 700; color: var(--text-dark); margin-bottom: 6px; }
+  .offer-desc { font-size: 13px; color: var(--text-gray); margin-bottom: 16px; line-height: 1.6; }
+  .offer-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn-accept {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    background: var(--green);
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-accept:hover { background: #009e38; }
+  .btn-decline {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    background: transparent;
+    color: var(--text-gray);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-decline:hover { border-color: #ccc; color: var(--text-dark); }
+  .offer-footer {
+    font-size: 11px;
+    color: #aaa;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Products */
+  .section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 16px;
+  }
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .product-card {
+    background: var(--white);
+    border-radius: 10px;
+    padding: 20px;
+    border: 1.5px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .product-card:hover { border-color: var(--green); box-shadow: 0 4px 16px rgba(0,177,64,0.12); transform: translateY(-1px); }
+  .product-icon {
+    width: 40px; height: 40px;
+    background: var(--green-light);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-bottom: 12px;
+  }
+  .product-name { font-size: 14px; font-weight: 700; color: var(--text-dark); margin-bottom: 4px; }
+  .product-rate { font-size: 13px; color: var(--green-dark); font-weight: 600; margin-bottom: 12px; }
+  .btn-learn {
+    display: inline-block;
+    padding: 7px 14px;
+    background: var(--green-light);
+    color: var(--green-dark);
+    border: none;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-learn:hover { background: #d1f0dd; }
+
+  /* Transactions */
+  .transactions-card {
+    background: var(--white);
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+  .transactions-card .card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-dark);
+  }
+  .txn-row {
+    display: flex;
+    align-items: center;
+    padding: 13px 20px;
+    border-bottom: 1px solid #f5f5f5;
+    gap: 12px;
+  }
+  .txn-row:last-child { border-bottom: none; }
+  .txn-icon {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--green-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .txn-icon.income { background: #e8f7ee; }
+  .txn-info { flex: 1; }
+  .txn-merchant { font-size: 13px; font-weight: 600; color: var(--text-dark); }
+  .txn-date { font-size: 11px; color: var(--text-gray); margin-top: 1px; }
+  .txn-amount { font-size: 14px; font-weight: 700; }
+  .txn-amount.debit { color: var(--text-dark); }
+  .txn-amount.credit { color: var(--green); }
+
+  /* ── PREFERENCES ── */
+  .preferences-body { padding: 28px 32px; max-width: 600px; }
+  .pref-card {
+    background: var(--white);
+    border-radius: 10px;
+    padding: 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+  }
+  .pref-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; color: var(--text-dark); }
+  .pref-card p { font-size: 12px; color: var(--text-gray); margin-bottom: 20px; }
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid #f5f5f5;
+  }
+  .toggle-row:last-of-type { border-bottom: none; }
+  .toggle-label { font-size: 13px; font-weight: 500; color: var(--text-dark); }
+  .toggle-sub { font-size: 11px; color: var(--text-gray); margin-top: 1px; }
+  .toggle-switch {
+    position: relative;
+    width: 44px; height: 24px;
+    flex-shrink: 0;
+  }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: #ddd;
+    border-radius: 24px;
+    transition: background 0.2s;
+  }
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+    left: 3px; top: 3px;
+    background: var(--white);
+    border-radius: 50%;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .toggle-switch input:checked + .toggle-slider { background: var(--green); }
+  .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
+  .btn-save {
+    margin-top: 4px;
+    padding: 11px 24px;
+    background: var(--green);
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-save:hover { background: #009e38; }
+  #consent-status {
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--green-dark);
+    min-height: 18px;
+  }
+
+  /* ── DCS FOOTER ── */
+  .dcs-footer {
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    padding: 14px 32px;
+    font-size: 11px;
+    color: #aaa;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .dcs-footer .partner-brand { font-weight: 700; color: #888; }
+
+  /* ── EVENT LOG ── */
+  #event-log {
+    position: fixed;
+    bottom: 0; left: var(--sidebar-w); right: 0;
+    z-index: 200;
+    font-family: "Menlo", "Consolas", monospace;
+  }
+  .log-tab {
+    background: #1A2E1A;
+    color: #4ade80;
+    padding: 7px 16px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 10px 10px 0 0;
+    width: fit-content;
+    user-select: none;
+  }
+  .log-tab:hover { background: #1f3a1f; }
+  .log-tab .log-count {
+    background: var(--green);
+    color: var(--white);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 10px;
+  }
+  .log-body {
+    background: #0f1f0f;
+    height: 0;
+    overflow: hidden;
+    transition: height 0.2s;
+  }
+  .log-body.open { height: 160px; overflow-y: auto; }
+  .log-inner { padding: 8px 16px; }
+  .log-line {
+    font-size: 11px;
+    color: #4ade80;
+    padding: 2px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .log-line .ts { color: #6a9955; margin-right: 6px; }
+  .log-line .evt { color: #86efac; font-weight: 600; }
+  .log-line .kafka { color: #38bdf8; }
+
+  /* ── SCENARIO PANEL ── */
+  #scenario-panel {
+    position: fixed;
+    top: 50%;
+    right: -290px;
+    transform: translateY(-50%);
+    width: 280px;
+    background: var(--white);
+    border-radius: 12px 0 0 12px;
+    box-shadow: -4px 0 24px rgba(0,0,0,0.12);
+    z-index: 300;
+    transition: right 0.3s ease;
+  }
+  #scenario-panel.open { right: 0; }
+  .scenario-toggle {
+    position: absolute;
+    left: -40px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--green);
+    color: var(--white);
+    width: 40px;
+    height: 80px;
+    border-radius: 8px 0 0 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 700;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    letter-spacing: 0.5px;
+    gap: 4px;
+    border: none;
+    font-family: inherit;
+    transition: background 0.2s;
+  }
+  .scenario-toggle:hover { background: var(--green-dark); }
+  .scenario-inner { padding: 20px 16px; }
+  .scenario-inner h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .scenario-btn {
+    display: block;
+    width: 100%;
+    margin-bottom: 6px;
+    padding: 8px 12px;
+    background: var(--green-light);
+    color: var(--green-dark);
+    border: none;
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s;
+  }
+  .scenario-btn:hover { background: #d1f0dd; }
+  .scenario-btn.running { background: var(--green); color: var(--white); }
+  .scenario-log {
+    background: #0f1f0f;
+    border-radius: 6px;
+    padding: 10px;
+    margin-top: 10px;
+    min-height: 60px;
+    max-height: 100px;
+    overflow-y: auto;
+  }
+  .scenario-log .s-line {
+    font-family: monospace;
+    font-size: 10px;
+    color: #4ade80;
+    padding: 1px 0;
+  }
+
+  /* Utility */
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════ LOGIN PAGE -->
+<div id="p-login">
+  <div class="login-card">
+    <div class="citadele-logo">
+      <div class="logo-row">
+        <div class="logo-diamond"></div>
+        <span class="logo-name">Citadele</span>
+      </div>
+      <span class="logo-tagline">Banka | Latvia</span>
+    </div>
+
+    <h1>Laipni lūdzam atpakaļ</h1>
+    <p class="subtitle">Sign in to your account</p>
+
+    <div class="form-group">
+      <label>E-pasta adrese</label>
+      <input type="email" value="anete.kalnina@inbox.lv" disabled>
+    </div>
+    <div class="form-group">
+      <label>Parole</label>
+      <input type="password" value="citadele2024" disabled>
+    </div>
+
+    <button class="btn-primary" onclick="signIn()">Sign In →</button>
+    <a class="guest-link" onclick="guestBrowse()">Continue as Guest</a>
+    <span class="demo-badge">DCS × Pega CDH Bridge — Demo Environment</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ MAIN APP -->
+<div id="p-app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="citadele-logo">
+        <div class="logo-row">
+          <div class="logo-diamond"></div>
+          <span class="logo-name">Citadele</span>
+        </div>
+        <span class="logo-tagline">Banka | Latvia</span>
+      </div>
+      <div class="sidebar-ib">Internet Banking</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-item active" onclick="showSection('overview', this)">
+        <span class="nav-icon">🏠</span>
+        <span>Pārskats</span>
+        <small style="margin-left:4px;color:var(--text-gray);font-size:10px">Overview</small>
+      </div>
+      <div class="nav-item" onclick="showSection('payments', this)">
+        <span class="nav-icon">💳</span>
+        <span>Maksājumi</span>
+      </div>
+      <div class="nav-item" onclick="showSection('accounts', this)">
+        <span class="nav-icon">🏦</span>
+        <span>Konti</span>
+      </div>
+      <div class="nav-item" onclick="showSection('investments', this)">
+        <span class="nav-icon">📊</span>
+        <span>Ieguldījumi</span>
+        <small style="margin-left:4px;color:var(--text-gray);font-size:10px">C Wealth</small>
+      </div>
+      <div class="nav-item" onclick="showSection('rewards', this)">
+        <span class="nav-icon">🎁</span>
+        <span>C REWARDS</span>
+        <span class="nav-badge">NEW</span>
+      </div>
+      <div class="nav-item" onclick="showSection('preferences', this)">
+        <span class="nav-icon">⚙️</span>
+        <span>Iestatījumi</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-name">Anete Kalniņa</div>
+        <div class="user-tier">Privātais klients</div>
+      </div>
+      <button class="btn-logout" onclick="logout()">
+        <span>⬅</span> Iziet (Logout)
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+
+    <!-- OVERVIEW -->
+    <section id="sec-overview" class="page-section active">
+      <div class="overview-header">
+        <h2>Labdien, Anete! 👋</h2>
+        <p>Here's your financial summary — <span id="today-date"></span></p>
+      </div>
+      <div class="overview-body">
+
+        <!-- Stats -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Norēķinu konts</div>
+            <div class="stat-value">€12,450.00</div>
+            <div class="stat-sub">Current Account · LV81CITI</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Uzkrājumi</div>
+            <div class="stat-value">€28,750.00</div>
+            <div class="stat-sub">Savings · 2.5% p.a.</div>
+          </div>
+          <div class="stat-card rewards">
+            <div class="stat-label">C REWARDS punkti</div>
+            <div class="stat-value orange">14,820</div>
+            <div class="stat-sub">Points · ≈ €148 value</div>
+          </div>
+          <div class="stat-card" style="border-left-color:#e74c3c">
+            <div class="stat-label">Aizdevumi</div>
+            <div class="stat-value" style="color:#c0392b">€45,200</div>
+            <div class="stat-sub">Outstanding · Mortgage</div>
+          </div>
+        </div>
+
+        <!-- NBA Zone -->
+        <div id="nba-zone">
+          <div class="nba-loading" id="nba-loading">
+            <div class="spinner"></div>
+            <div>
+              <div class="loading-text">🎯 Notiek personalizācija...</div>
+              <div class="loading-sub">Pega CDH analizē jūsu profilu</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Products -->
+        <div class="section-title">Citadele produkti</div>
+        <div class="products-grid">
+          <div class="product-card" onclick="trackProductView('consumer_loan','Patēriņa kredīts')">
+            <div class="product-icon">💰</div>
+            <div class="product-name">Patēriņa kredīts</div>
+            <div class="product-rate">No 5.9% gadā</div>
+            <button class="btn-learn">Uzzināt vairāk</button>
+          </div>
+          <div class="product-card" onclick="trackProductView('mortgage','Hipotekārais kredīts')">
+            <div class="product-icon">🏡</div>
+            <div class="product-name">Hipotekārais kredīts</div>
+            <div class="product-rate">No 2.8% + EURIBOR</div>
+            <button class="btn-learn">Uzzināt vairāk</button>
+          </div>
+          <div class="product-card" onclick="trackProductView('c_rewards_card','C REWARDS Karte')">
+            <div class="product-icon">🎁</div>
+            <div class="product-name">C REWARDS Karte</div>
+            <div class="product-rate">Nopelni punktus katru dienu</div>
+            <button class="btn-learn">Uzzināt vairāk</button>
+          </div>
+        </div>
+
+        <!-- Transactions -->
+        <div class="section-title">Pēdējie darījumi</div>
+        <div class="transactions-card">
+          <div class="card-header">Pēdējās 5 transakcijas</div>
+          <div class="txn-row">
+            <div class="txn-icon">🛒</div>
+            <div class="txn-info">
+              <div class="txn-merchant">Rimi Supermarket</div>
+              <div class="txn-date">Šodien, 11:24</div>
+            </div>
+            <div class="txn-amount debit">-€42.50</div>
+          </div>
+          <div class="txn-row">
+            <div class="txn-icon income">💼</div>
+            <div class="txn-info">
+              <div class="txn-merchant">Darba alga — SIA TechLatvia</div>
+              <div class="txn-date">Vakar, 09:00</div>
+            </div>
+            <div class="txn-amount credit">+€2,850.00</div>
+          </div>
+          <div class="txn-row">
+            <div class="txn-icon">🛍️</div>
+            <div class="txn-info">
+              <div class="txn-merchant">Maxima</div>
+              <div class="txn-date">3. jūn., 19:42</div>
+            </div>
+            <div class="txn-amount debit">-€28.00</div>
+          </div>
+          <div class="txn-row">
+            <div class="txn-icon">🛡️</div>
+            <div class="txn-info">
+              <div class="txn-merchant">Citadele Apdrošināšana</div>
+              <div class="txn-date">1. jūn., 08:00</div>
+            </div>
+            <div class="txn-amount debit">-€45.00</div>
+          </div>
+          <div class="txn-row">
+            <div class="txn-icon">🏪</div>
+            <div class="txn-info">
+              <div class="txn-merchant">Netto</div>
+              <div class="txn-date">31. maij., 17:15</div>
+            </div>
+            <div class="txn-amount debit">-€18.50</div>
+          </div>
+        </div>
+
+        <!-- DCS Footer -->
+        <div class="dcs-footer">
+          <span>CDH Bridge implemented by</span>
+          <span class="partner-brand">DCS — Decision Consultant Solutions</span>
+          <span>•</span>
+          <span>Powered by</span>
+          <span class="partner-brand">Pega Customer Decision Hub</span>
+          <span>•</span>
+          <span>Citadele Banka Demo Environment</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- PREFERENCES -->
+    <section id="sec-preferences" class="page-section">
+      <div class="overview-header">
+        <h2>Privātuma iestatījumi ⚙️</h2>
+        <p>Pārvaldiet savas komunikācijas preferences</p>
+      </div>
+      <div class="preferences-body">
+        <div class="pref-card">
+          <h3>Komunikācijas piekrišanas</h3>
+          <p>Pārvaldiet, kā Citadele ar jums sazinās</p>
+
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">Mārketinga e-pasti</div>
+              <div class="toggle-sub">Marketing emails</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="t-email" checked onchange="prefChanged()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">SMS paziņojumi</div>
+              <div class="toggle-sub">SMS notifications</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="t-sms" checked onchange="prefChanged()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">Push paziņojumi</div>
+              <div class="toggle-sub">Push notifications</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="t-push" checked onchange="prefChanged()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">Mārketinga komunikācijas</div>
+              <div class="toggle-sub">All marketing communications</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="t-marketing" checked onchange="prefChanged()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <button class="btn-save" onclick="savePreferences()">💾 Saglabāt (Save)</button>
+        <div id="consent-status"></div>
+
+        <div class="dcs-footer" style="padding:14px 0;margin-top:20px">
+          <span>Consent managed via CDH Bridge</span>
+          <span class="partner-brand">DCS × Pega CDH</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- STUB sections for other nav items -->
+    <section id="sec-payments" class="page-section">
+      <div class="overview-header"><h2>Maksājumi 💳</h2><p>Payments — coming soon in this demo</p></div>
+      <div style="padding:32px;color:var(--text-gray);font-size:14px">Maksājumu sadaļa nav pieejama šajā demo versijā.</div>
+    </section>
+    <section id="sec-accounts" class="page-section">
+      <div class="overview-header"><h2>Konti 🏦</h2><p>Accounts</p></div>
+      <div style="padding:32px;color:var(--text-gray);font-size:14px">Kontu sadaļa nav pieejama šajā demo versijā.</div>
+    </section>
+    <section id="sec-investments" class="page-section">
+      <div class="overview-header"><h2>Ieguldījumi 📊</h2><p>C Wealth Management</p></div>
+      <div style="padding:32px;color:var(--text-gray);font-size:14px">Ieguldījumu sadaļa nav pieejama šajā demo versijā.</div>
+    </section>
+    <section id="sec-rewards" class="page-section">
+      <div class="overview-header" style="background:linear-gradient(135deg,#cc5500,var(--orange))"><h2>C REWARDS 🎁</h2><p>Jūsu lojalitātes punkti</p></div>
+      <div style="padding:32px;color:var(--text-gray);font-size:14px">C REWARDS sadaļa nav pieejama šajā demo versijā.</div>
+    </section>
+
+  </div><!-- /main-content -->
+
+  <!-- EVENT LOG -->
+  <div id="event-log">
+    <div class="log-tab" onclick="toggleLog()">
+      📡 CDH Bridge Events <span class="log-count" id="log-count">0</span>
+      <span id="log-chevron">▲</span>
+    </div>
+    <div class="log-body" id="log-body">
+      <div class="log-inner" id="log-lines"></div>
+    </div>
+  </div>
+
+  <!-- SCENARIO PANEL -->
+  <div id="scenario-panel">
+    <button class="scenario-toggle" onclick="toggleScenarioPanel()">⚡ Demo</button>
+    <div class="scenario-inner">
+      <h3>⚡ Demo Scenāriji</h3>
+      <button class="scenario-btn" onclick="runScenario(1)">▶ 1. Anonīma pārlūkošana</button>
+      <button class="scenario-btn" onclick="runScenario(2)">▶ 2. Ieeja &amp; Identitātes sasaiste</button>
+      <button class="scenario-btn" onclick="runScenario(3)">▶ 3. NBA Lēmums no Pega CDH</button>
+      <button class="scenario-btn" onclick="runScenario(4)">▶ 4. Produktu pārlūkošana</button>
+      <button class="scenario-btn" onclick="runScenario(5)">▶ 5. Privātuma iestatījumi</button>
+      <button class="scenario-btn" onclick="runScenario(6)">▶ 6. Pilns demo (60s)</button>
+      <div class="scenario-log" id="scenario-log">
+        <div class="s-line" style="color:#6a9955">Izvēlieties scenāriju...</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /p-app -->
+
+<!-- ═══════════════════════════════════════════════════ SCRIPTS -->
+<script>
+/* ── SDK LOADER with fallback stub ── */
+(function() {
+  var script = document.createElement('script');
+  script.src = '../../sdk/nexus.js';
+  script.onerror = function() {
+    console.warn('[CitadeleDemo] nexus.js not found — activating stub SDK');
+    installStub();
+  };
+  script.onload = function() {
+    console.log('[CitadeleDemo] nexus.js loaded');
+    if (typeof NexusCDP === 'undefined') installStub();
+  };
+  document.head.appendChild(script);
+})();
+
+function installStub() {
+  var _handlers = {};
+  var _initialized = false;
+  var _identity = null;
+
+  window.NexusCDP = {
+    init: function(cfg) {
+      _initialized = true;
+      console.log('[NexusCDP STUB] init', cfg);
+      emit('sdk:ready', { stub: true, config: cfg });
+    },
+    identify: function(id, traits, cb) {
+      _identity = { id: id, traits: traits };
+      console.log('[NexusCDP STUB] identify', id, traits);
+      emit('identify', { customerId: id, traits: traits });
+      setTimeout(function() { if (cb) cb(null, { identified: true, customerId: id }); }, 150);
+    },
+    track: function(event, props, cb) {
+      console.log('[NexusCDP STUB] track', event, props);
+      var offset = Math.floor(Math.random() * 99000) + 1000;
+      emit('track', { event: event, properties: props, kafka: { offset: offset, topic: 'citadele.events' } });
+      setTimeout(function() { if (cb) cb(null, { tracked: true, event: event, kafka: { offset: offset } }); }, 100);
+    },
+    getNBA: function(ctx, cb) {
+      console.log('[NexusCDP STUB] getNBA', ctx);
+      emit('cdh:request', { context: ctx });
+      setTimeout(function() {
+        var decisions = [
+          {
+            id: 'NBA-CITADELE-' + Date.now(),
+            name: 'Hipotekārais kredīts ar īpašu likmi',
+            description: 'Pamatojoties uz jūsu finanšu profilu, mēs piedāvājam hipotekāro kredītu ar īpašu likmi no 2.4% + EURIBOR. Īpaši pielāgots jūsu ienākumu līmenim.',
+            issue: 'RetailBanking',
+            group: 'Mortgages',
+            propensity: 0.87,
+            value: 4500,
+            rank: 1,
+            channel: 'Web',
+            direction: 'Inbound'
+          }
+        ];
+        emit('cdh:response', { decisions: decisions });
+        if (cb) cb(null, decisions);
+      }, 1800);
+    },
+    optOut: function(categories, cb) {
+      console.log('[NexusCDP STUB] optOut', categories);
+      emit('consent:optout', { categories: categories });
+      setTimeout(function() { if (cb) cb(null, { updated: true, categories: categories }); }, 200);
+    },
+    optIn: function(categories, cb) {
+      console.log('[NexusCDP STUB] optIn', categories);
+      emit('consent:optin', { categories: categories });
+      setTimeout(function() { if (cb) cb(null, { updated: true, categories: categories }); }, 200);
+    },
+    on: function(event, handler) {
+      if (!_handlers[event]) _handlers[event] = [];
+      _handlers[event].push(handler);
+    },
+    off: function(event, handler) {
+      if (_handlers[event]) _handlers[event] = _handlers[event].filter(function(h) { return h !== handler; });
+    }
+  };
+
+  function emit(event, data) {
+    var handlers = _handlers[event] || [];
+    handlers.forEach(function(h) { try { h(data); } catch(e) {} });
+    var wildcard = _handlers['*'] || [];
+    wildcard.forEach(function(h) { try { h(event, data); } catch(e) {} });
+  }
+}
+</script>
+
+<script>
+/* ── CUSTOMER PERSONA ── */
+var CUSTOMER = {
+  customerId: 'CUST-CITADELE-ANETE-001',
+  name: 'Anete Kalniņa',
+  email: 'anete.kalnina@inbox.lv',
+  tier: 'private',
+  bank: 'Citadele',
+  language: 'lv',
+  segment: 'RetailGold',
+  age: 34,
+  city: 'Rīga'
+};
+
+var logCount = 0;
+var logOpen = false;
+var scenarioPanelOpen = false;
+
+/* ── INIT DATE ── */
+document.getElementById('today-date').textContent = new Date().toLocaleDateString('lv-LV', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+/* ── SDK INIT (deferred until stub loads) ── */
+function initSDK() {
+  if (typeof NexusCDP === 'undefined') {
+    setTimeout(initSDK, 100);
+    return;
+  }
+  NexusCDP.init({
+    apiKey: 'pk_citadele_demo',
+    collectorUrl: 'http://localhost:3001',
+    profileUrl: 'http://localhost:3002',
+    cdhUrl: 'http://localhost:3010',
+    feedbackUrl: 'http://localhost:3003',
+    consentUrl: 'http://localhost:3004',
+    debug: true,
+    autoTrack: false
+  });
+  bindSDKListeners();
+}
+setTimeout(initSDK, 300);
+
+/* ── SDK EVENT LISTENERS → Event Log ── */
+function bindSDKListeners() {
+  var events = ['sdk:ready','identify','track','cdh:request','cdh:response','consent:optout','consent:optin'];
+  events.forEach(function(evt) {
+    NexusCDP.on(evt, function(data) {
+      var ihType = mapEventToIH(evt, data);
+      var kafka = (data && data.kafka) ? 'Kafka:' + data.kafka.offset : 'Kafka:pending';
+      appendLog(evt, ihType, kafka);
+    });
+  });
+}
+
+function mapEventToIH(evt, data) {
+  var map = {
+    'sdk:ready': 'SDK_INIT',
+    'identify': 'CUSTOMER_IDENTIFY',
+    'track': data && data.event ? 'IH_' + data.event.toUpperCase() : 'IH_TRACK',
+    'cdh:request': 'CDH_NBA_REQUEST',
+    'cdh:response': 'CDH_NBA_RESPONSE',
+    'consent:optout': 'CONSENT_OPTOUT',
+    'consent:optin': 'CONSENT_OPTIN'
+  };
+  return map[evt] || evt.toUpperCase();
+}
+
+/* ── EVENT LOG UI ── */
+function appendLog(eventType, ihType, kafka) {
+  logCount++;
+  document.getElementById('log-count').textContent = logCount;
+  var ts = new Date().toTimeString().substring(0,8);
+  var line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML =
+    '<span class="ts">[' + ts + ']</span>' +
+    '<span class="evt">' + eventType + '</span>' +
+    ' → CDH IH: ' + ihType +
+    ' ✅ <span class="kafka">' + kafka + '</span>';
+  var container = document.getElementById('log-lines');
+  container.insertBefore(line, container.firstChild);
+}
+
+function toggleLog() {
+  logOpen = !logOpen;
+  document.getElementById('log-body').classList.toggle('open', logOpen);
+  document.getElementById('log-chevron').textContent = logOpen ? '▼' : '▲';
+}
+
+/* ── NAVIGATION ── */
+function showSection(name, navEl) {
+  document.querySelectorAll('.page-section').forEach(function(s) { s.classList.remove('active'); });
+  document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+  var sec = document.getElementById('sec-' + name);
+  if (sec) sec.classList.add('active');
+  if (navEl) navEl.classList.add('active');
+  if (typeof NexusCDP !== 'undefined') {
+    NexusCDP.track('page_view', { page: name, section: name, bank: 'Citadele' });
+  }
+}
+
+/* ── SIGN IN ── */
+function signIn() {
+  var btn = document.querySelector('#p-login .btn-primary');
+  btn.textContent = 'Ienākšana...';
+  btn.disabled = true;
+
+  function doSignIn() {
+    NexusCDP.identify(CUSTOMER.customerId, {
+      name: CUSTOMER.name,
+      email: CUSTOMER.email,
+      tier: CUSTOMER.tier,
+      bank: CUSTOMER.bank,
+      language: CUSTOMER.language,
+      segment: CUSTOMER.segment,
+      city: CUSTOMER.city
+    }, function(err, res) {
+      if (!err) {
+        NexusCDP.track('page_view', { page: 'dashboard', authenticated: true, bank: 'Citadele' });
+      }
+    });
+
+    document.getElementById('p-login').style.display = 'none';
+    document.getElementById('p-app').style.display = 'block';
+    btn.textContent = 'Sign In →';
+    btn.disabled = false;
+
+    setTimeout(function() {
+      getNBADecision();
+    }, 2000);
+  }
+
+  if (typeof NexusCDP !== 'undefined') {
+    doSignIn();
+  } else {
+    setTimeout(function() {
+      if (typeof NexusCDP === 'undefined') installStub();
+      doSignIn();
+    }, 400);
+  }
+}
+
+/* ── GUEST BROWSE ── */
+function guestBrowse() {
+  if (typeof NexusCDP !== 'undefined') {
+    NexusCDP.track('page_view', { page: 'landing', authenticated: false, bank: 'Citadele', mode: 'guest' });
+  }
+  document.getElementById('p-login').style.display = 'none';
+  document.getElementById('p-app').style.display = 'block';
+  document.querySelector('.user-name').textContent = 'Viesis';
+  document.querySelector('.user-tier').textContent = 'Guest';
+  setTimeout(getNBADecision, 2000);
+}
+
+/* ── NBA ── */
+function getNBADecision() {
+  if (typeof NexusCDP === 'undefined') { setTimeout(getNBADecision, 300); return; }
+  NexusCDP.getNBA({
+    customerId: CUSTOMER.customerId,
+    channel: 'Web',
+    context: 'dashboard',
+    bank: 'Citadele',
+    language: 'lv'
+  }, showNBABanner);
+}
+
+function showNBABanner(err, decisions) {
+  var zone = document.getElementById('nba-zone');
+
+  if (err || !decisions || decisions.length === 0) {
+    zone.innerHTML = '<div style="background:var(--white);border-radius:12px;padding:20px 24px;border:1.5px solid var(--border);color:var(--text-gray);font-size:13px">Nav pieejamu personalizētu piedāvājumu šobrīd.</div>';
+    return;
+  }
+
+  var d = decisions[0];
+  var propPct = Math.round((d.propensity || 0.75) * 100);
+
+  zone.innerHTML =
+    '<div class="nba-offer">' +
+      '<div class="nba-offer-header">' +
+        '<div>' +
+          '<div style="font-size:11px;opacity:0.85;margin-bottom:2px">Jūsu personalizētais piedāvājums</div>' +
+          '<div class="offer-title">🎯 Pega CDH ieteikums</div>' +
+        '</div>' +
+        '<span class="propensity-badge">Propensity: ' + propPct + '%</span>' +
+      '</div>' +
+      '<div class="nba-offer-body">' +
+        '<div class="offer-name">' + (d.name || 'Personalizēts piedāvājums') + '</div>' +
+        '<div class="offer-desc">' + (d.description || 'Īpašs piedāvājums jums, pamatojoties uz jūsu finanšu profilu.') + '</div>' +
+        '<div class="offer-actions">' +
+          '<button class="btn-accept" onclick="acceptOffer(\'' + d.id + '\')">' +
+            '✅ Pieņemt piedāvājumu' +
+          '</button>' +
+          '<button class="btn-decline" onclick="declineOffer(\'' + d.id + '\')">' +
+            '❌ Nav intereses' +
+          '</button>' +
+        '</div>' +
+        '<div class="offer-footer">' +
+          'Powered by Pega CDH • DCS Implementation • Issue: ' + (d.issue || 'RetailBanking') + ' / ' + (d.group || 'Offers') +
+        '</div>' +
+      '</div>' +
+    '</div>';
+}
+
+function acceptOffer(offerId) {
+  if (typeof NexusCDP !== 'undefined') {
+    NexusCDP.track('offer_accept', { offerId: offerId, bank: 'Citadele', channel: 'Web' });
+  }
+  document.getElementById('nba-zone').innerHTML =
+    '<div style="background:var(--green-light);border:1.5px solid var(--green);border-radius:12px;padding:20px 24px;color:var(--green-dark);font-weight:600;font-size:14px">' +
+    '✅ Paldies! Mūsu speciālists sazināsies ar jums 24 stundu laikā. Piedāvājums pieņemts.' +
+    '</div>';
+  sLog('Offer accepted: ' + offerId);
+}
+
+function declineOffer(offerId) {
+  if (typeof NexusCDP !== 'undefined') {
+    NexusCDP.track('offer_decline', { offerId: offerId, bank: 'Citadele', channel: 'Web' });
+  }
+  document.getElementById('nba-zone').innerHTML =
+    '<div style="background:#fff8f5;border:1.5px solid #ffd6b8;border-radius:12px;padding:20px 24px;color:#996644;font-size:13px">' +
+    'Piedāvājums noraidīts. Pega CDH atjauninās jūsu profilu.' +
+    '</div>';
+}
+
+/* ── PRODUCT VIEW ── */
+function trackProductView(productId, productName) {
+  if (typeof NexusCDP !== 'undefined') {
+    NexusCDP.track('product_view', {
+      productId: productId,
+      productName: productName,
+      bank: 'Citadele',
+      channel: 'Web',
+      language: 'lv'
+    });
+  }
+}
+
+/* ── PREFERENCES ── */
+function prefChanged() { /* real-time feedback optional */ }
+
+function savePreferences() {
+  var email = document.getElementById('t-email').checked;
+  var sms = document.getElementById('t-sms').checked;
+  var push = document.getElementById('t-push').checked;
+  var marketing = document.getElementById('t-marketing').checked;
+
+  var optedOut = [];
+  if (!email) optedOut.push('email_marketing');
+  if (!sms) optedOut.push('sms_notifications');
+  if (!push) optedOut.push('push_notifications');
+  if (!marketing) optedOut.push('marketing_all');
+
+  var optedIn = [];
+  if (email) optedIn.push('email_marketing');
+  if (sms) optedIn.push('sms_notifications');
+  if (push) optedIn.push('push_notifications');
+  if (marketing) optedIn.push('marketing_all');
+
+  var status = document.getElementById('consent-status');
+  status.textContent = 'Saglabā...';
+
+  function done() {
+    status.textContent = '✅ Preferences saglabātas. CDH profils atjaunināts.';
+    setTimeout(function() { status.textContent = ''; }, 4000);
+  }
+
+  if (typeof NexusCDP !== 'undefined') {
+    if (optedOut.length > 0) {
+      NexusCDP.optOut(optedOut, function() {
+        if (optedIn.length > 0) {
+          NexusCDP.optIn(optedIn, done);
+        } else { done(); }
+      });
+    } else if (optedIn.length > 0) {
+      NexusCDP.optIn(optedIn, done);
+    } else { done(); }
+  } else { done(); }
+}
+
+/* ── LOGOUT ── */
+function logout() {
+  document.getElementById('p-app').style.display = 'none';
+  document.getElementById('p-login').style.display = 'flex';
+  logCount = 0;
+  document.getElementById('log-count').textContent = '0';
+  document.getElementById('log-lines').innerHTML = '';
+  document.getElementById('nba-zone').innerHTML =
+    '<div class="nba-loading" id="nba-loading">' +
+    '<div class="spinner"></div>' +
+    '<div><div class="loading-text">🎯 Notiek personalizācija...</div>' +
+    '<div class="loading-sub">Pega CDH analizē jūsu profilu</div></div>' +
+    '</div>';
+  // reset toggles
+  ['t-email','t-sms','t-push','t-marketing'].forEach(function(id) {
+    document.getElementById(id).checked = true;
+  });
+  document.getElementById('consent-status').textContent = '';
+}
+
+/* ── SCENARIO PANEL ── */
+function toggleScenarioPanel() {
+  scenarioPanelOpen = !scenarioPanelOpen;
+  document.getElementById('scenario-panel').classList.toggle('open', scenarioPanelOpen);
+}
+
+function sLog(msg) {
+  var log = document.getElementById('scenario-log');
+  var line = document.createElement('div');
+  line.className = 's-line';
+  line.textContent = '[' + new Date().toTimeString().substring(0,8) + '] ' + msg;
+  log.insertBefore(line, log.firstChild);
+}
+
+function runScenario(n) {
+  var btns = document.querySelectorAll('.scenario-btn');
+  btns.forEach(function(b) { b.classList.remove('running'); });
+  btns[n-1].classList.add('running');
+
+  var scenarios = {
+    1: scenario1_anonymousBrowse,
+    2: scenario2_loginStitch,
+    3: scenario3_nbaDecision,
+    4: scenario4_productBrowse,
+    5: scenario5_consentOptout,
+    6: scenario6_fullJourney
+  };
+  document.getElementById('scenario-log').innerHTML = '';
+  sLog('▶ Sāk scenārijs ' + n + '...');
+  scenarios[n]();
+  setTimeout(function() { btns[n-1].classList.remove('running'); }, n === 6 ? 65000 : 5000);
+}
+
+function scenario1_anonymousBrowse() {
+  sLog('👤 Anonīms lietotājs apmeklē Citadele');
+  setTimeout(function() {
+    if (typeof NexusCDP !== 'undefined') NexusCDP.track('page_view', { page: 'home', authenticated: false });
+    sLog('📡 page_view izsūtīts → CDH IH');
+  }, 500);
+  setTimeout(function() {
+    if (typeof NexusCDP !== 'undefined') NexusCDP.track('product_browse', { category: 'loans', authenticated: false });
+    sLog('📡 product_browse → CDH segmentācija');
+  }, 1500);
+  setTimeout(function() { sLog('✅ Anonīmā pārlūkošana pabeigta'); }, 2500);
+}
+
+function scenario2_loginStitch() {
+  sLog('🔐 Lietotājs pieslēdzas — identitātes sasaiste');
+  setTimeout(function() {
+    if (typeof NexusCDP !== 'undefined') {
+      NexusCDP.identify(CUSTOMER.customerId, { name: CUSTOMER.name, email: CUSTOMER.email, bank: 'Citadele' });
+    }
+    sLog('🔗 identify() izsaukts → CUST-CITADELE-ANETE-001');
+  }, 600);
+  setTimeout(function() {
+    sLog('✅ Anonīmais profils savienots ar Anete Kalniņa');
+    sLog('📊 CDH IH atjaunināts ar identitāti');
+  }, 2000);
+}
+
+function scenario3_nbaDecision() {
+  sLog('🎯 Pieprasa NBA no Pega CDH');
+  document.getElementById('nba-zone').innerHTML =
+    '<div class="nba-loading"><div class="spinner"></div><div><div class="loading-text">🎯 Notiek personalizācija...</div><div class="loading-sub">Pega CDH analizē jūsu profilu</div></div></div>';
+  setTimeout(function() {
+    sLog('📤 CDH Bridge → cdhUrl/nba pieprasījums');
+    sLog('⚙️  Pega CDH apstrādā lēmumu...');
+  }, 500);
+  setTimeout(function() {
+    sLog('📥 CDH atbilde saņemta — 1 lēmums');
+    getNBADecision();
+    sLog('✅ NBA banner atjaunināts');
+  }, 2000);
+}
+
+function scenario4_productBrowse() {
+  sLog('🏦 Produktu pārlūkošanas scenārijs');
+  var products = [
+    { id: 'consumer_loan', name: 'Patēriņa kredīts' },
+    { id: 'mortgage', name: 'Hipotekārais kredīts' },
+    { id: 'c_rewards_card', name: 'C REWARDS Karte' }
+  ];
+  products.forEach(function(p, i) {
+    setTimeout(function() {
+      trackProductView(p.id, p.name);
+      sLog('👁️  product_view: ' + p.name);
+    }, (i + 1) * 800);
+  });
+  setTimeout(function() { sLog('✅ 3 produktu skatījumi izsūtīti → CDH IH'); }, 3000);
+}
+
+function scenario5_consentOptout() {
+  sLog('🔒 Privātuma iestatījumu scenārijs');
+  showSection('preferences', document.querySelectorAll('.nav-item')[5]);
+  setTimeout(function() {
+    document.getElementById('t-marketing').checked = false;
+    document.getElementById('t-email').checked = false;
+    sLog('🔕 Mārketinga komunikācijas izslēgtas');
+  }, 800);
+  setTimeout(function() {
+    if (typeof NexusCDP !== 'undefined') {
+      NexusCDP.optOut(['email_marketing', 'marketing_all'], function() {});
+    }
+    sLog('📡 optOut() → consentUrl CDH Bridge');
+    sLog('✅ Piekrišanas profils atjaunināts Pega CDH');
+  }, 1800);
+}
+
+function scenario6_fullJourney() {
+  sLog('🚀 Pilns demo ceļojums (60s)...');
+  var steps = [
+    [2000,  function() { sLog('1️⃣  Anonīma pārlūkošana sākta'); scenario1_anonymousBrowse(); }],
+    [8000,  function() { sLog('2️⃣  Lietotājs pieslēdzas — Anete Kalniņa'); scenario2_loginStitch(); }],
+    [15000, function() { sLog('3️⃣  NBA lēmums no Pega CDH'); scenario3_nbaDecision(); }],
+    [22000, function() { sLog('4️⃣  Produktu pārlūkošana'); showSection('overview', document.querySelectorAll('.nav-item')[0]); scenario4_productBrowse(); }],
+    [35000, function() { sLog('5️⃣  Privātuma iestatījumi'); scenario5_consentOptout(); }],
+    [50000, function() { sLog('6️⃣  Atgriešanās uz pārskatu'); showSection('overview', document.querySelectorAll('.nav-item')[0]); }],
+    [60000, function() { sLog('🏁 Pilns demo pabeigts!'); sLog('✅ Visi CDH Bridge notikumi izsūtīti'); }]
+  ];
+  steps.forEach(function(step) { setTimeout(step[1], step[0]); });
+}
+</script>
+
+</body>
+</html>

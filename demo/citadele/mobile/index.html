@@ -1,0 +1,1817 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Citadele Mobile Banking — CDH Bridge Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green: #00B140;
+    --dark-green: #006827;
+    --light-green-bg: #E8F7EE;
+    --orange: #FF6B00;
+    --white: #FFFFFF;
+    --text-dark: #1A1A1A;
+    --text-muted: #6B7280;
+    --border: #E5E7EB;
+    --bg: #F5F5F5;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, #00B140 0%, #006827 50%, #004d1c 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+  }
+
+  /* PHONE FRAME */
+  .phone {
+    width: 390px;
+    max-width: 100%;
+    height: 844px;
+    background: #fff;
+    border-radius: 44px;
+    overflow: hidden;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.35);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+
+  /* STATUS BAR */
+  .status-bar {
+    height: 44px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    flex-shrink: 0;
+    z-index: 10;
+  }
+  .status-bar .time {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--dark-green);
+    letter-spacing: -0.3px;
+  }
+  .status-icons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--dark-green);
+  }
+  .status-icons svg { width: 16px; height: 12px; fill: var(--dark-green); }
+
+  /* SCREEN CONTAINER */
+  .screens {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* INDIVIDUAL SCREENS */
+  .screen {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    background: #fff;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  .screen.active { display: flex; }
+
+  /* HOME INDICATOR */
+  .home-indicator {
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: #fff;
+  }
+  .home-indicator-pill {
+    width: 134px;
+    height: 5px;
+    background: #1A1A1A;
+    border-radius: 3px;
+    opacity: 0.18;
+  }
+
+  /* ===== SCREEN 1 — BIOMETRIC ===== */
+  #s-bio {
+    align-items: center;
+    justify-content: center;
+    padding: 40px 32px;
+    gap: 0;
+    background: #fff;
+  }
+  .bio-logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .logo-mark {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-diamond {
+    font-size: 36px;
+    color: var(--green);
+    line-height: 1;
+  }
+  .logo-text {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--dark-green);
+    letter-spacing: -0.5px;
+  }
+  .bio-subtitle {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-top: 6px;
+    letter-spacing: 0.3px;
+  }
+  .bio-email {
+    font-size: 13px;
+    color: #9CA3AF;
+    margin-top: 4px;
+  }
+  .faceid-container {
+    margin: 40px 0 36px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .faceid-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    border: 3px solid var(--green);
+    position: relative;
+    background: var(--light-green-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .faceid-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 6px;
+    width: 44px;
+    height: 44px;
+  }
+  .faceid-dot {
+    background: var(--green);
+    border-radius: 2px;
+    opacity: 0.7;
+  }
+  .faceid-dot.big {
+    border-radius: 50%;
+    opacity: 1;
+  }
+  /* Face pattern */
+  .faceid-icon::before {
+    content: '';
+    position: absolute;
+    top: 14px; left: 50%;
+    transform: translateX(-50%);
+    width: 36px; height: 20px;
+    border: 2.5px solid var(--green);
+    border-radius: 50%;
+    border-bottom: none;
+  }
+  .faceid-icon::after {
+    content: '';
+    position: absolute;
+    bottom: 14px; left: 50%;
+    transform: translateX(-50%);
+    width: 22px; height: 10px;
+    border: 2.5px solid var(--green);
+    border-radius: 0 0 12px 12px;
+    border-top: none;
+  }
+  .faceid-eyes {
+    position: absolute;
+    top: 26px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+  }
+  .faceid-eye {
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+  }
+  .bio-btn {
+    width: 100%;
+    height: 56px;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 28px;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .bio-btn:active { transform: scale(0.97); background: var(--dark-green); }
+  .bio-btn.loading { background: var(--dark-green); }
+  .bio-link {
+    margin-top: 16px;
+    font-size: 14px;
+    color: var(--text-muted);
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+    background: none;
+    font-family: 'Inter', sans-serif;
+    padding: 8px;
+  }
+  .bio-link:hover { color: var(--dark-green); }
+
+  /* ===== SCREEN 2 — HOME ===== */
+  #s-home {
+    background: #F8F9FA;
+  }
+  .home-header {
+    background: #fff;
+    padding: 16px 20px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .home-greeting {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-dark);
+  }
+  .bell-btn {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--light-green-bg);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    position: relative;
+  }
+  .bell-dot {
+    position: absolute;
+    top: 8px; right: 8px;
+    width: 8px; height: 8px;
+    background: var(--orange);
+    border-radius: 50%;
+    border: 2px solid #fff;
+  }
+  .home-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 16px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* BALANCE CARD */
+  .balance-card {
+    background: linear-gradient(135deg, #00B140 0%, #006827 100%);
+    border-radius: 20px;
+    padding: 20px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+  .balance-card::before {
+    content: '';
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 150px; height: 150px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 50%;
+  }
+  .balance-card::after {
+    content: '';
+    position: absolute;
+    bottom: -50px; left: -20px;
+    width: 180px; height: 180px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 50%;
+  }
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
+  }
+  .card-bank-name {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    opacity: 0.9;
+  }
+  .card-chip {
+    width: 32px; height: 24px;
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+  }
+  .card-chip::after {
+    content: '';
+    display: block;
+    width: 20px; height: 14px;
+    border: 1.5px solid rgba(255,255,255,0.5);
+    border-radius: 3px;
+  }
+  .balance-amount {
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    position: relative;
+    z-index: 1;
+    margin-bottom: 4px;
+  }
+  .card-account {
+    font-size: 13px;
+    opacity: 0.8;
+    position: relative;
+    z-index: 1;
+    margin-bottom: 12px;
+  }
+  .card-label {
+    font-size: 11px;
+    opacity: 0.7;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* QUICK ACTIONS */
+  .quick-actions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .qa-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    padding: 8px 4px;
+    border-radius: 12px;
+    transition: background 0.15s;
+    border: none;
+    background: none;
+    font-family: 'Inter', sans-serif;
+  }
+  .qa-btn:active { background: var(--light-green-bg); }
+  .qa-circle {
+    width: 52px; height: 52px;
+    background: var(--light-green-bg);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+  }
+  .qa-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-dark);
+    text-align: center;
+  }
+
+  /* OFFER CARD */
+  #offer-card {
+    background: #fff;
+    border-radius: 16px;
+    border-left: 4px solid var(--green);
+    padding: 16px;
+    display: none;
+    box-shadow: 0 2px 12px rgba(0,177,64,0.12);
+    animation: slideIn 0.4s ease;
+  }
+  #offer-card.visible { display: block; }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .offer-header {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--green);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .offer-title-text {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 10px;
+  }
+  .offer-link {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--green);
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+    background: none;
+    font-family: 'Inter', sans-serif;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .offer-link:hover { color: var(--dark-green); }
+
+  /* TRANSACTIONS */
+  .section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 4px;
+  }
+  .transactions {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .tx-row {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid #F3F4F6;
+    gap: 12px;
+  }
+  .tx-row:last-child { border-bottom: none; }
+  .tx-icon {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    background: #F3F4F6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .tx-info { flex: 1; }
+  .tx-name { font-size: 14px; font-weight: 500; color: var(--text-dark); }
+  .tx-date { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .tx-amount {
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .tx-amount.debit { color: var(--text-dark); }
+  .tx-amount.credit { color: var(--green); }
+
+  /* BOTTOM TABS */
+  .bottom-tabs {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 72px;
+    background: #fff;
+    border-top: 1px solid #F0F0F0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    z-index: 20;
+  }
+  .tab-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 8px 4px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.15s;
+  }
+  .tab-icon { font-size: 20px; }
+  .tab-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+  .tab-btn.active .tab-label { color: var(--green); font-weight: 600; }
+  .tab-btn.active .tab-icon { filter: none; }
+
+  /* ===== SCREEN 3 — PRODUCTS ===== */
+  #s-products {
+    background: #F8F9FA;
+  }
+  .screen-header {
+    background: #fff;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #F0F0F0;
+    flex-shrink: 0;
+  }
+  .back-btn {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--green);
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-family: 'Inter', sans-serif;
+    padding: 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .screen-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-dark);
+  }
+  .products-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 16px 32px;
+  }
+  .products-cards {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 8px;
+    margin-bottom: 24px;
+  }
+  .products-cards::-webkit-scrollbar { display: none; }
+  .product-card {
+    min-width: 240px;
+    border-radius: 20px;
+    padding: 24px;
+    color: #fff;
+    scroll-snap-align: start;
+    cursor: pointer;
+    transition: transform 0.15s;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .product-card:active { transform: scale(0.97); }
+  .pc-green { background: linear-gradient(135deg, #00B140, #006827); }
+  .pc-darkgreen { background: linear-gradient(135deg, #006827, #003d18); }
+  .pc-orange { background: linear-gradient(135deg, #FF6B00, #cc5500); }
+  .pc-navy { background: linear-gradient(135deg, #1a3a6b, #0d1f40); }
+  .product-card-icon { font-size: 28px; }
+  .product-card-name {
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .product-card-rate {
+    font-size: 22px;
+    font-weight: 800;
+  }
+  .product-card-btn {
+    margin-top: 8px;
+    padding: 10px 20px;
+    background: rgba(255,255,255,0.2);
+    border: 1.5px solid rgba(255,255,255,0.5);
+    border-radius: 20px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    align-self: flex-start;
+    transition: all 0.15s;
+  }
+  .product-card-btn:hover { background: rgba(255,255,255,0.3); }
+
+  /* ===== SCREEN 4 — OFFER DETAIL ===== */
+  #s-offer {
+    background: #F8F9FA;
+  }
+  .offer-hero {
+    background: linear-gradient(135deg, #00B140, #006827);
+    padding: 40px 24px 32px;
+    color: #fff;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .offer-hero-emoji { font-size: 48px; margin-bottom: 12px; }
+  #detail-product {
+    font-size: 24px;
+    font-weight: 800;
+  }
+  .offer-content {
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    flex: 1;
+  }
+  .benefits-list {
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .benefit-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-dark);
+  }
+  .benefit-check {
+    width: 24px; height: 24px;
+    background: var(--light-green-bg);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--green);
+    font-size: 14px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .rate-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+  }
+  .rate-big {
+    font-size: 48px;
+    font-weight: 800;
+    color: var(--green);
+    line-height: 1;
+  }
+  .rate-label {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .personalized-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--light-green-bg);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--dark-green);
+    margin-top: 12px;
+  }
+  .propensity-badge {
+    background: var(--green);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: 4px;
+  }
+  .accept-btn {
+    width: 100%;
+    height: 56px;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 16px;
+    font-size: 17px;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .accept-btn:active { transform: scale(0.98); background: var(--dark-green); }
+  .later-btn {
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 8px;
+    border: none;
+    background: none;
+    font-family: 'Inter', sans-serif;
+  }
+  .later-btn:hover { color: var(--text-dark); }
+
+  /* ===== SCREEN 5 — CONFIRMATION ===== */
+  #s-confirm {
+    align-items: center;
+    justify-content: center;
+    padding: 40px 32px;
+    gap: 20px;
+    background: #fff;
+    text-align: center;
+  }
+  .confirm-circle {
+    width: 100px; height: 100px;
+    background: var(--light-green-bg);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid var(--green);
+    animation: popIn 0.4s ease;
+  }
+  @keyframes popIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    80% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .confirm-check {
+    font-size: 40px;
+    color: var(--green);
+    font-weight: 700;
+    line-height: 1;
+  }
+  .confirm-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text-dark);
+  }
+  .confirm-text {
+    font-size: 15px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    max-width: 260px;
+  }
+  .confirm-btn {
+    width: 100%;
+    height: 56px;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-top: 8px;
+  }
+  .confirm-btn:active { transform: scale(0.98); }
+
+  /* ===== SCREEN 6 — PROFILE ===== */
+  #s-profile {
+    background: #F8F9FA;
+  }
+  .profile-header {
+    background: linear-gradient(135deg, #00B140, #006827);
+    padding: 24px 20px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    color: #fff;
+  }
+  .profile-avatar {
+    width: 80px; height: 80px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 800;
+    color: #fff;
+    border: 3px solid rgba(255,255,255,0.5);
+  }
+  .profile-name {
+    font-size: 20px;
+    font-weight: 700;
+  }
+  .profile-badge {
+    background: rgba(255,255,255,0.2);
+    padding: 4px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .profile-content {
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    overflow-y: auto;
+  }
+  .settings-group {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .settings-row {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    gap: 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-bottom: 1px solid #F3F4F6;
+  }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-row:active { background: #F8F9FA; }
+  .settings-icon {
+    width: 38px; height: 38px;
+    background: var(--light-green-bg);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .settings-row.red .settings-icon { background: #FEE2E2; }
+  .settings-label {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-dark);
+  }
+  .settings-row.red .settings-label { color: #DC2626; }
+  .settings-chevron {
+    color: #CBD5E0;
+    font-size: 16px;
+  }
+
+  /* ===== EVENTS DRAWER ===== */
+  .events-drawer {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: #fff;
+    border-radius: 24px 24px 0 0;
+    box-shadow: 0 -4px 40px rgba(0,0,0,0.15);
+    z-index: 100;
+    transform: translateY(calc(100% - 40px));
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    max-height: 80%;
+    display: flex;
+    flex-direction: column;
+  }
+  .events-drawer.open { transform: translateY(0); }
+  .drawer-handle {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    gap: 6px;
+  }
+  .handle-pill {
+    width: 40px; height: 4px;
+    background: #E5E7EB;
+    border-radius: 2px;
+  }
+  .drawer-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+  .events-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 16px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .event-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    background: #F8F9FA;
+    border-radius: 10px;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .event-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 5px;
+  }
+  .dot-green { background: var(--green); }
+  .dot-blue { background: #3B82F6; }
+  .dot-orange { background: var(--orange); }
+  .dot-purple { background: #8B5CF6; }
+  .dot-red { background: #EF4444; }
+  .event-info {}
+  .event-type {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--dark-green);
+  }
+  .event-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .event-time {
+    font-size: 10px;
+    color: #CBD5E0;
+    margin-top: 2px;
+  }
+
+  /* SCENARIO PANEL */
+  .scenario-fab {
+    position: absolute;
+    bottom: 90px; right: 16px;
+    width: 48px; height: 48px;
+    background: var(--green);
+    border-radius: 50%;
+    border: none;
+    color: #fff;
+    font-size: 22px;
+    cursor: pointer;
+    z-index: 50;
+    box-shadow: 0 4px 16px rgba(0,177,64,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .scenario-fab:active { transform: scale(0.92); }
+  .scenario-panel {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    display: none;
+    align-items: flex-end;
+  }
+  .scenario-panel.open { display: flex; }
+  .scenario-sheet {
+    background: #fff;
+    border-radius: 24px 24px 0 0;
+    width: 100%;
+    padding: 20px 20px 32px;
+    animation: slideUp 0.3s ease;
+    max-height: 88%;
+    overflow-y: auto;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .scenario-handle {
+    width: 40px; height: 4px;
+    background: #E5E7EB;
+    border-radius: 2px;
+    margin: 0 auto 16px;
+  }
+  .scenario-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--text-dark);
+    margin-bottom: 4px;
+  }
+  .scenario-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+  .scenario-btn {
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--light-green-bg);
+    border: 1.5px solid #C6E8D4;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--dark-green);
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    text-align: left;
+    margin-bottom: 8px;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .scenario-btn:active { background: #C6E8D4; }
+  .scenario-footer {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #F0F0F0;
+    text-align: center;
+    font-size: 11px;
+    color: #9CA3AF;
+  }
+
+  /* TOAST */
+  .toast {
+    position: absolute;
+    bottom: 100px; left: 16px; right: 16px;
+    background: var(--text-dark);
+    color: #fff;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 300;
+    text-align: center;
+    animation: toastIn 0.3s ease;
+    display: none;
+  }
+  .toast.show { display: block; }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* SDK console log overlay */
+  .sdk-log {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    max-height: 0;
+    overflow: hidden;
+    background: rgba(0,0,0,0.85);
+    color: #00ff88;
+    font-size: 11px;
+    font-family: monospace;
+    z-index: 9999;
+    transition: max-height 0.3s;
+  }
+</style>
+</head>
+<body>
+
+<!-- PHONE FRAME -->
+<div class="phone" id="phone">
+
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <span class="time">9:41</span>
+    <div class="status-icons">
+      <!-- Signal -->
+      <svg viewBox="0 0 17 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:17px;height:12px;">
+        <rect x="0" y="7" width="3" height="5" rx="0.5" fill="#006827"/>
+        <rect x="4.5" y="5" width="3" height="7" rx="0.5" fill="#006827"/>
+        <rect x="9" y="2.5" width="3" height="9.5" rx="0.5" fill="#006827"/>
+        <rect x="13.5" y="0" width="3" height="12" rx="0.5" fill="#006827"/>
+      </svg>
+      <!-- WiFi -->
+      <svg viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:16px;height:12px;">
+        <path d="M8 9.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" fill="#006827"/>
+        <path d="M4.5 7C5.7 5.8 6.8 5 8 5s2.3.8 3.5 2" stroke="#006827" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        <path d="M1.5 4.5C3.3 2.7 5.5 1.5 8 1.5s4.7 1.2 6.5 3" stroke="#006827" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      </svg>
+      <!-- Battery -->
+      <svg viewBox="0 0 25 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:25px;height:12px;">
+        <rect x="0" y="0.5" width="21" height="11" rx="3.5" stroke="#006827" stroke-width="1"/>
+        <rect x="1.5" y="2" width="16" height="8" rx="2" fill="#006827"/>
+        <path d="M22.5 4.5v3a1.5 1.5 0 000-3z" fill="#006827" opacity="0.4"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- SCREENS -->
+  <div class="screens" id="screens">
+
+    <!-- SCREEN 1 — BIOMETRIC -->
+    <div class="screen active" id="s-bio">
+      <div class="bio-logo">
+        <div class="logo-mark">
+          <span class="logo-diamond">◆</span>
+          <span class="logo-text">Citadele</span>
+        </div>
+        <div class="bio-subtitle">Citadele Mobile</div>
+        <div class="bio-email">anete.kalnina@inbox.lv</div>
+      </div>
+      <div class="faceid-container">
+        <div class="faceid-icon">
+          <div class="faceid-eyes">
+            <div class="faceid-eye"></div>
+            <div class="faceid-eye"></div>
+          </div>
+        </div>
+        <div style="font-size:13px;color:var(--text-muted);">Face ID gatavs</div>
+      </div>
+      <button class="bio-btn" id="biobtn" onclick="doBiometricLogin()">
+        <span id="bio-btn-icon">🔐</span>
+        <span id="bio-btn-text">Ieiet ar Face ID</span>
+      </button>
+      <button class="bio-link">Izmantot paroli</button>
+    </div>
+
+    <!-- SCREEN 2 — HOME -->
+    <div class="screen" id="s-home">
+      <div class="home-header">
+        <div class="home-greeting">Labdien, Anete ☀️</div>
+        <button class="bell-btn" onclick="toggleEventsDrawer()">
+          🔔
+          <div class="bell-dot" id="bell-dot" style="display:none;"></div>
+        </button>
+      </div>
+      <div class="home-scroll">
+        <!-- Balance Card -->
+        <div class="balance-card">
+          <div class="card-top">
+            <div class="card-bank-name">Citadele</div>
+            <div class="card-chip"></div>
+          </div>
+          <div class="balance-amount">€12,450.00</div>
+          <div class="card-account">Norēķinu konts •• 4521</div>
+          <div class="card-label">PIEEJAMAIS ATLIKUMS</div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+          <button class="qa-btn" onclick="showToast('Pārskaitīšana...')">
+            <div class="qa-circle">💸</div>
+            <div class="qa-label">Pārskaitīt</div>
+          </button>
+          <button class="qa-btn" onclick="showToast('Saņemšana...')">
+            <div class="qa-circle">📥</div>
+            <div class="qa-label">Saņemt</div>
+          </button>
+          <button class="qa-btn" onclick="showToast('Maksājums...')">
+            <div class="qa-circle">💳</div>
+            <div class="qa-label">Maksāt</div>
+          </button>
+          <button class="qa-btn" onclick="showScreen('s-products')">
+            <div class="qa-circle">⋯</div>
+            <div class="qa-label">Vairāk</div>
+          </button>
+        </div>
+
+        <!-- Smart Offer Card -->
+        <div id="offer-card">
+          <div class="offer-header">🎯 Personalizēts piedāvājums</div>
+          <div class="offer-title-text" id="offer-title">Patēriņa kredīts 5.9%</div>
+          <button class="offer-link" onclick="showOfferDetail()">Skatīt →</button>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div>
+          <div class="section-title">Pēdējie darījumi</div>
+        </div>
+        <div class="transactions">
+          <div class="tx-row">
+            <div class="tx-icon">🛒</div>
+            <div class="tx-info">
+              <div class="tx-name">Rimi</div>
+              <div class="tx-date">Šodien, 10:23</div>
+            </div>
+            <div class="tx-amount debit">-€42.50</div>
+          </div>
+          <div class="tx-row">
+            <div class="tx-icon">💼</div>
+            <div class="tx-info">
+              <div class="tx-name">Alga</div>
+              <div class="tx-date">Vakar, 09:00</div>
+            </div>
+            <div class="tx-amount credit">+€2,850.00</div>
+          </div>
+          <div class="tx-row">
+            <div class="tx-icon">🏪</div>
+            <div class="tx-info">
+              <div class="tx-name">Maxima</div>
+              <div class="tx-date">05.06, 18:45</div>
+            </div>
+            <div class="tx-amount debit">-€28.00</div>
+          </div>
+          <div class="tx-row">
+            <div class="tx-icon">🚗</div>
+            <div class="tx-info">
+              <div class="tx-name">Circle K</div>
+              <div class="tx-date">04.06, 14:12</div>
+            </div>
+            <div class="tx-amount debit">-€65.00</div>
+          </div>
+          <div class="tx-row">
+            <div class="tx-icon">📱</div>
+            <div class="tx-info">
+              <div class="tx-name">Bite Latvia</div>
+              <div class="tx-date">03.06, 12:00</div>
+            </div>
+            <div class="tx-amount debit">-€18.99</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Tabs -->
+      <div class="bottom-tabs">
+        <button class="tab-btn active" id="tab-home" onclick="activateTab('tab-home'); showScreen('s-home')">
+          <span class="tab-icon">🏠</span>
+          <span class="tab-label">Sākums</span>
+        </button>
+        <button class="tab-btn" id="tab-pay" onclick="activateTab('tab-pay'); showToast('Maksājumi')">
+          <span class="tab-icon">💸</span>
+          <span class="tab-label">Maksājumi</span>
+        </button>
+        <button class="tab-btn" id="tab-cards" onclick="activateTab('tab-cards'); showToast('Kartes')">
+          <span class="tab-icon">💳</span>
+          <span class="tab-label">Kartes</span>
+        </button>
+        <button class="tab-btn" id="tab-profile" onclick="activateTab('tab-profile'); showScreen('s-profile')">
+          <span class="tab-icon">👤</span>
+          <span class="tab-label">Profils</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- SCREEN 3 — PRODUCTS -->
+    <div class="screen" id="s-products">
+      <div class="screen-header">
+        <button class="back-btn" onclick="showScreen('s-home')">← Atpakaļ</button>
+        <div class="screen-title">Produkti</div>
+      </div>
+      <div class="products-scroll">
+        <div class="products-cards">
+          <div class="product-card pc-green" onclick="trackProduct('Patēriņa kredīts')">
+            <div class="product-card-icon">💰</div>
+            <div class="product-card-name">Patēriņa kredīts</div>
+            <div class="product-card-rate">No 5.9%</div>
+            <button class="product-card-btn">Pieteikties</button>
+          </div>
+          <div class="product-card pc-darkgreen" onclick="trackProduct('Hipotekārais kredīts')">
+            <div class="product-card-icon">🏠</div>
+            <div class="product-card-name">Hipotekārais</div>
+            <div class="product-card-rate">No 2.8%+EURIBOR</div>
+            <button class="product-card-btn">Aprēķināt</button>
+          </div>
+          <div class="product-card pc-orange" onclick="trackProduct('C REWARDS')">
+            <div class="product-card-icon">⭐</div>
+            <div class="product-card-name">C REWARDS</div>
+            <div class="product-card-rate">Nopelni punktus</div>
+            <button class="product-card-btn">Iegūt</button>
+          </div>
+          <div class="product-card pc-navy" onclick="trackProduct('C Wealth')">
+            <div class="product-card-icon">📈</div>
+            <div class="product-card-name">C Wealth</div>
+            <div class="product-card-rate">Ieguldījumi</div>
+            <button class="product-card-btn">Uzzināt</button>
+          </div>
+        </div>
+        <div style="font-size:13px;color:var(--text-muted);padding:8px 0;">Velciet →, lai redzētu vairāk</div>
+      </div>
+    </div>
+
+    <!-- SCREEN 4 — OFFER DETAIL -->
+    <div class="screen" id="s-offer">
+      <div class="screen-header" style="background:linear-gradient(135deg,#00B140,#006827);border:none;">
+        <button class="back-btn" style="color:#fff;" onclick="showScreen('s-home')">← Atpakaļ</button>
+      </div>
+      <div class="offer-hero">
+        <div class="offer-hero-emoji">💰</div>
+        <div id="detail-product">Patēriņa kredīts</div>
+      </div>
+      <div class="offer-content">
+        <div class="benefits-list">
+          <div class="benefit-row">
+            <div class="benefit-check">✓</div>
+            Fiksēta likme
+          </div>
+          <div class="benefit-row">
+            <div class="benefit-check">✓</div>
+            Bez komisijas maksas
+          </div>
+          <div class="benefit-row">
+            <div class="benefit-check">✓</div>
+            Ātra apstiprināšana
+          </div>
+        </div>
+        <div class="rate-card">
+          <div class="rate-big">5.9%</div>
+          <div class="rate-label">gadā (per year)</div>
+          <div style="display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:6px;margin-top:12px;">
+            <div class="personalized-badge">Personalizēts Anete</div>
+            <div class="propensity-badge">87% propensity</div>
+          </div>
+        </div>
+        <button class="accept-btn" onclick="acceptOffer()">Pieņemt piedāvājumu</button>
+        <button class="later-btn" onclick="showScreen('s-home')">Varbūt vēlāk</button>
+      </div>
+    </div>
+
+    <!-- SCREEN 5 — CONFIRMATION -->
+    <div class="screen" id="s-confirm">
+      <div class="confirm-circle">
+        <div class="confirm-check">✓</div>
+      </div>
+      <div class="confirm-title">Pieteikums iesniegts! 🎉</div>
+      <div class="confirm-text">Mēs izskatīsim Jūsu pieteikumu 2 darba dienu laikā. Atbilde tiks nosūtīta uz anete.kalnina@inbox.lv</div>
+      <button class="confirm-btn" onclick="showScreen('s-home')">Atgriezties sākumā</button>
+    </div>
+
+    <!-- SCREEN 6 — PROFILE -->
+    <div class="screen" id="s-profile">
+      <div style="background:#fff;padding:16px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #F0F0F0;flex-shrink:0;">
+        <button class="back-btn" onclick="showScreen('s-home')">← Atpakaļ</button>
+        <div class="screen-title">Profils</div>
+      </div>
+      <div class="profile-header">
+        <div class="profile-avatar">AK</div>
+        <div class="profile-name">Anete Kalniņa</div>
+        <div class="profile-badge">Privātais klients</div>
+      </div>
+      <div class="profile-content">
+        <div class="settings-group">
+          <div class="settings-row" onclick="showToast('Paziņojumi')">
+            <div class="settings-icon">🔔</div>
+            <div class="settings-label">Paziņojumi</div>
+            <div class="settings-chevron">›</div>
+          </div>
+          <div class="settings-row" onclick="showToast('Privātums un dati')">
+            <div class="settings-icon">🔒</div>
+            <div class="settings-label">Privātums un dati</div>
+            <div class="settings-chevron">›</div>
+          </div>
+          <div class="settings-row" onclick="doOptOut()">
+            <div class="settings-icon">📢</div>
+            <div class="settings-label">Mārketinga preferences</div>
+            <div class="settings-chevron">›</div>
+          </div>
+          <div class="settings-row" onclick="showToast('Drošība')">
+            <div class="settings-icon">⚙️</div>
+            <div class="settings-label">Drošība</div>
+            <div class="settings-chevron">›</div>
+          </div>
+        </div>
+        <div class="settings-group">
+          <div class="settings-row red" onclick="doSignOut()">
+            <div class="settings-icon">🚪</div>
+            <div class="settings-label">Iziet</div>
+            <div class="settings-chevron" style="color:#EF4444;">›</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:#CBD5E0;text-align:center;padding:8px 0;">Citadele Mobile v4.2.0 • CDH Bridge</div>
+      </div>
+    </div>
+
+    <!-- EVENTS DRAWER -->
+    <div class="events-drawer" id="events-drawer">
+      <div class="drawer-handle" onclick="toggleEventsDrawer()">
+        <div class="handle-pill"></div>
+        <div class="drawer-title" id="drawer-title">📡 CDH Bridge — 0 notikumi šajā sesijā</div>
+      </div>
+      <div class="events-list" id="events-list"></div>
+    </div>
+
+    <!-- SCENARIO FAB -->
+    <button class="scenario-fab" onclick="openScenarioPanel()">⚡</button>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+  </div><!-- /screens -->
+
+  <!-- HOME INDICATOR -->
+  <div class="home-indicator">
+    <div class="home-indicator-pill"></div>
+  </div>
+
+  <!-- SCENARIO PANEL -->
+  <div class="scenario-panel" id="scenario-panel" onclick="closeScenarioPanel(event)">
+    <div class="scenario-sheet">
+      <div class="scenario-handle"></div>
+      <div class="scenario-title">Demo Scenāriji</div>
+      <div class="scenario-subtitle">DCS × Citadele × Pega CDH</div>
+      <button class="scenario-btn" onclick="runScenario(1)">📱 1. Anonīma pārlūkošana</button>
+      <button class="scenario-btn" onclick="runScenario(2)">🔐 2. Face ID Ieeja + Identitātes sasaiste</button>
+      <button class="scenario-btn" onclick="runScenario(3)">🎯 3. NBA Piedāvājums no Pega CDH</button>
+      <button class="scenario-btn" onclick="runScenario(4)">🏠 4. Produktu pārlūkošana</button>
+      <button class="scenario-btn" onclick="runScenario(5)">✅ 5. Piedāvājuma pieņemšana</button>
+      <button class="scenario-btn" onclick="runScenario(6)">🔒 6. Privātuma iestatījumi</button>
+      <div class="scenario-footer">Implementēja DCS • Pega Customer Decision Hub • Citadele Banka</div>
+    </div>
+  </div>
+
+</div><!-- /phone -->
+
+<!-- SDK Load -->
+<script>
+  // Try to load the real SDK; fall back to inline stub
+  (function() {
+    var script = document.createElement('script');
+    script.src = '../../sdk/nexus-mobile.js';
+    script.onerror = function() {
+      console.warn('[CDH] nexus-mobile.js not found — using inline stub');
+      initFallbackSDK();
+    };
+    script.onload = function() {
+      console.log('[CDH] nexus-mobile.js loaded');
+      if (typeof NexusCDP !== 'undefined') {
+        initSDK();
+      } else {
+        initFallbackSDK();
+      }
+    };
+    document.head.appendChild(script);
+  })();
+
+  function initFallbackSDK() {
+    window.NexusCDP = {
+      _events: [],
+      _customer: null,
+      _opts: {},
+      init: function(cfg) {
+        console.log('[NexusCDP STUB] init', cfg);
+        this._cfg = cfg;
+        return Promise.resolve({status:'ok',mode:'stub'});
+      },
+      trackAppOpen: function(d) {
+        this._track('APP_OPEN', d);
+        return Promise.resolve();
+      },
+      track: function(evt, data, ch) {
+        this._track(evt.toUpperCase(), Object.assign({channel: ch||'mobile'}, data));
+        return Promise.resolve();
+      },
+      biometricLogin: function(custId, profile) {
+        this._customer = {id: custId, ...profile};
+        this._track('IH_LOGIN', {customerId: custId, method:'biometric', ...profile});
+        return Promise.resolve({customerId: custId, ...profile, authenticated: true});
+      },
+      getNBA: function(custId, ctx) {
+        this._track('IH_NBA_REQUEST', {customerId: custId, ...ctx});
+        return Promise.resolve({
+          offer: {
+            id: 'NBA-CIT-001',
+            title: 'Patēriņa kredīts 5.9%',
+            product: 'consumer_loan',
+            rate: '5.9%',
+            propensity: 0.87,
+            channel: 'mobile',
+            action: 'CONSUMER_LOAN_OFFER'
+          }
+        });
+      },
+      sendFeedback: function(offerId, outcome, ctx) {
+        this._track('IH_FEEDBACK', {offerId, outcome, ...ctx});
+        return Promise.resolve();
+      },
+      optOut: function(channels) {
+        this._track('CONSENT_OPT_OUT', {channels});
+        return Promise.resolve({status:'saved', channels});
+      },
+      reset: function() {
+        this._track('SESSION_RESET', {});
+        this._customer = null;
+        return Promise.resolve();
+      },
+      _track: function(type, data) {
+        var ev = {type, data, ts: new Date().toISOString()};
+        this._events.push(ev);
+        addEventToDrawer(ev);
+        console.log('[NexusCDP]', type, data);
+      }
+    };
+    initSDK();
+  }
+
+  function initSDK() {
+    NexusCDP.init({
+      endpoints: {
+        primary: 'http://localhost:8080/cdh/v1',
+        fallback: 'http://localhost:3001/cdh/v1',
+        websocket: 'ws://localhost:8080/cdh/stream'
+      },
+      bank: 'Citadele',
+      env: 'demo',
+      debug: true
+    }).then(function() {
+      NexusCDP.trackAppOpen({platform:'mobile', bank:'Citadele', appVersion:'4.2.0'});
+      console.log('[CDH] App open tracked');
+    });
+  }
+</script>
+
+<script>
+  // ===== STATE =====
+  var currentScreen = 's-bio';
+  var eventCount = 0;
+  var drawerOpen = false;
+  var nbaOffer = null;
+
+  // ===== SCREEN NAVIGATION =====
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(function(s) {
+      s.classList.remove('active');
+    });
+    var el = document.getElementById(id);
+    if (el) {
+      el.classList.add('active');
+      currentScreen = id;
+    }
+    // Close events drawer when navigating
+    if (drawerOpen) toggleEventsDrawer();
+  }
+
+  function activateTab(tabId) {
+    document.querySelectorAll('.tab-btn').forEach(function(t) {
+      t.classList.remove('active');
+    });
+    var el = document.getElementById(tabId);
+    if (el) el.classList.add('active');
+  }
+
+  // ===== BIOMETRIC LOGIN =====
+  function doBiometricLogin() {
+    var btn = document.getElementById('biobtn');
+    var icon = document.getElementById('bio-btn-icon');
+    var text = document.getElementById('bio-btn-text');
+    btn.classList.add('loading');
+    btn.disabled = true;
+    icon.textContent = '⏳';
+    text.textContent = 'Autentificē...';
+
+    setTimeout(function() {
+      NexusCDP.biometricLogin('CUST-CITADELE-ANETE-001', {
+        name: 'Anete Kalniņa',
+        tier: 'private',
+        bank: 'Citadele'
+      }).then(function(result) {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+        icon.textContent = '✅';
+        text.textContent = 'Autentificēts!';
+
+        setTimeout(function() {
+          showScreen('s-home');
+          activateTab('tab-home');
+          // Show bell notification dot
+          document.getElementById('bell-dot').style.display = 'block';
+          // Get NBA offer 2s after login
+          setTimeout(getNBAOffer, 2000);
+        }, 400);
+      });
+    }, 1500);
+  }
+
+  // ===== NBA OFFER =====
+  function getNBAOffer() {
+    NexusCDP.getNBA('CUST-CITADELE-ANETE-001', {
+      channel: 'mobile',
+      context: 'home_screen',
+      bank: 'Citadele'
+    }).then(function(result) {
+      if (result && result.offer) {
+        nbaOffer = result.offer;
+        var titleEl = document.getElementById('offer-title');
+        if (titleEl) titleEl.textContent = nbaOffer.title || 'Patēriņa kredīts 5.9%';
+        var card = document.getElementById('offer-card');
+        if (card) card.classList.add('visible');
+      }
+    });
+  }
+
+  // ===== OFFER DETAIL =====
+  function showOfferDetail() {
+    if (nbaOffer) {
+      document.getElementById('detail-product').textContent = nbaOffer.title || 'Patēriņa kredīts';
+    }
+    NexusCDP.track('offer_viewed', {
+      offerId: nbaOffer ? nbaOffer.id : 'NBA-CIT-001',
+      product: nbaOffer ? nbaOffer.product : 'consumer_loan'
+    }, 'mobile');
+    showScreen('s-offer');
+  }
+
+  // ===== ACCEPT OFFER =====
+  function acceptOffer() {
+    var btn = document.querySelector('.accept-btn');
+    btn.textContent = 'Apstrādā...';
+    btn.disabled = true;
+
+    NexusCDP.track('offer_accepted', {
+      offerId: nbaOffer ? nbaOffer.id : 'NBA-CIT-001',
+      product: nbaOffer ? nbaOffer.product : 'consumer_loan',
+      outcome: 'ACCEPTED'
+    }, 'mobile');
+
+    if (NexusCDP.sendFeedback) {
+      NexusCDP.sendFeedback(
+        nbaOffer ? nbaOffer.id : 'NBA-CIT-001',
+        'ACCEPTED',
+        {channel: 'mobile', bank: 'Citadele', customerId: 'CUST-CITADELE-ANETE-001'}
+      );
+    }
+
+    setTimeout(function() {
+      btn.textContent = 'Pieņemt piedāvājumu';
+      btn.disabled = false;
+      showScreen('s-confirm');
+    }, 800);
+  }
+
+  // ===== PRODUCT TRACKING =====
+  function trackProduct(name) {
+    NexusCDP.track('product_view', {product: name}, 'mobile');
+    showToast('📊 Izsekots: ' + name);
+  }
+
+  // ===== OPT OUT =====
+  function doOptOut() {
+    NexusCDP.optOut(['push', 'email']).then(function() {
+      showToast('✓ Saglabāts — mārketinga preferenses atjauninātas');
+    });
+  }
+
+  // ===== SIGN OUT =====
+  function doSignOut() {
+    NexusCDP.reset().then(function() {
+      // Reset bio button
+      var btn = document.getElementById('biobtn');
+      var icon = document.getElementById('bio-btn-icon');
+      var text = document.getElementById('bio-btn-text');
+      btn.disabled = false;
+      btn.classList.remove('loading');
+      icon.textContent = '🔐';
+      text.textContent = 'Ieiet ar Face ID';
+      // Hide offer card
+      document.getElementById('offer-card').classList.remove('visible');
+      nbaOffer = null;
+      showScreen('s-bio');
+    });
+  }
+
+  // ===== EVENTS DRAWER =====
+  function addEventToDrawer(ev) {
+    eventCount++;
+    document.getElementById('drawer-title').textContent =
+      '📡 CDH Bridge — ' + eventCount + ' notikum' + (eventCount === 1 ? 's' : 'i') + ' šajā sesijā';
+    document.getElementById('bell-dot').style.display = 'block';
+
+    var dotClass = 'dot-green';
+    var typeLabel = ev.type;
+    if (ev.type.includes('LOGIN') || ev.type.includes('RESET')) dotClass = 'dot-blue';
+    if (ev.type.includes('FEEDBACK') || ev.type.includes('CONSENT')) dotClass = 'dot-orange';
+    if (ev.type.includes('NBA')) dotClass = 'dot-purple';
+    if (ev.type.includes('ERROR')) dotClass = 'dot-red';
+
+    var latvianLabels = {
+      'APP_OPEN': 'Lietotne atvērta',
+      'IH_LOGIN': 'Identitāte sasaistīta',
+      'IH_NBA_REQUEST': 'NBA pieprasījums Pega CDH',
+      'IH_FEEDBACK': 'Atbilde uz piedāvājumu',
+      'CONSENT_OPT_OUT': 'Piekrišanas atcelšana',
+      'SESSION_RESET': 'Sesija pabeigta',
+      'OFFER_VIEWED': 'Piedāvājums apskatīts',
+      'OFFER_ACCEPTED': 'Piedāvājums pieņemts',
+      'PRODUCT_VIEW': 'Produkts apskatīts'
+    };
+
+    var label = latvianLabels[ev.type] || ev.type;
+    var ts = new Date().toLocaleTimeString('lv-LV', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+
+    var row = document.createElement('div');
+    row.className = 'event-row';
+    row.innerHTML =
+      '<div class="event-dot ' + dotClass + '"></div>' +
+      '<div class="event-info">' +
+        '<div class="event-type">' + label + '</div>' +
+        '<div class="event-desc">' + (ev.data && ev.data.customerId ? 'ID: ' + ev.data.customerId : JSON.stringify(ev.data).substring(0, 60)) + '</div>' +
+        '<div class="event-time">' + ts + '</div>' +
+      '</div>';
+
+    var list = document.getElementById('events-list');
+    list.insertBefore(row, list.firstChild);
+  }
+
+  function toggleEventsDrawer() {
+    var drawer = document.getElementById('events-drawer');
+    drawerOpen = !drawerOpen;
+    drawer.classList.toggle('open', drawerOpen);
+  }
+
+  // ===== SCENARIO PANEL =====
+  function openScenarioPanel() {
+    document.getElementById('scenario-panel').classList.add('open');
+  }
+  function closeScenarioPanel(e) {
+    if (e.target === document.getElementById('scenario-panel')) {
+      document.getElementById('scenario-panel').classList.remove('open');
+    }
+  }
+
+  // ===== 6 DEMO SCENARIOS =====
+  async function runScenario(n) {
+    document.getElementById('scenario-panel').classList.remove('open');
+    await delay(200);
+
+    switch(n) {
+      case 1:
+        // Anonymous browsing
+        showScreen('s-bio');
+        await delay(300);
+        NexusCDP.track('anonymous_browse', {page:'login', bank:'Citadele', anonymous:true}, 'mobile');
+        showToast('📱 Skenē: anonīma pārlūkošana izsekota');
+        break;
+
+      case 2:
+        // Face ID Login + Identity stitching
+        showScreen('s-bio');
+        await delay(500);
+        showToast('🔐 Sāk Face ID autentifikāciju...');
+        await delay(800);
+        doBiometricLogin();
+        break;
+
+      case 3:
+        // NBA Offer from Pega CDH
+        if (currentScreen !== 's-home') {
+          showScreen('s-home');
+          await delay(400);
+        }
+        showToast('🎯 Pieprasa NBA no Pega CDH...');
+        await delay(500);
+        getNBAOffer();
+        break;
+
+      case 4:
+        // Product browsing
+        showScreen('s-products');
+        await delay(400);
+        showToast('🏠 Produktu pārlūkošana sākta');
+        await delay(600);
+        trackProduct('Patēriņa kredīts');
+        break;
+
+      case 5:
+        // Offer acceptance
+        if (!nbaOffer) {
+          getNBAOffer();
+          await delay(600);
+        }
+        showOfferDetail();
+        await delay(400);
+        showToast('✅ Gatavs pieņemt piedāvājumu');
+        break;
+
+      case 6:
+        // Privacy settings
+        showScreen('s-profile');
+        await delay(400);
+        showToast('🔒 Privātuma iestatījumi');
+        await delay(800);
+        doOptOut();
+        break;
+    }
+  }
+
+  // ===== TOAST =====
+  var toastTimer = null;
+  function showToast(msg) {
+    var el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function() {
+      el.classList.remove('show');
+    }, 2500);
+  }
+
+  // ===== UTILS =====
+  function delay(ms) {
+    return new Promise(function(resolve) { setTimeout(resolve, ms); });
+  }
+</script>
+
+</body>
+</html>
