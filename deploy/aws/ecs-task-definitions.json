@@ -1,0 +1,124 @@
+{
+  "_comment": "AWS ECS Task Definitions for CDH Bridge. Deploy with: aws ecs register-task-definition --cli-input-json file://ecs-task-definitions.json",
+  "_prerequisites": [
+    "AWS CLI configured: aws configure",
+    "ECR repos created or use GHCR images",
+    "ElastiCache Redis cluster running",
+    "MSK (Kafka) cluster running",
+    "ECS cluster created: aws ecs create-cluster --cluster-name cdh-bridge"
+  ],
+
+  "services": [
+    {
+      "family": "cdh-bridge-mock-cdh",
+      "networkMode": "awsvpc",
+      "requiresCompatibilities": ["FARGATE"],
+      "cpu": "256",
+      "memory": "512",
+      "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+      "containerDefinitions": [
+        {
+          "name": "mock-cdh",
+          "image": "ghcr.io/sunilmlodha/cdh-bridge-mock-cdh:latest",
+          "portMappings": [{ "containerPort": 3010, "protocol": "tcp" }],
+          "environment": [
+            { "name": "PORT",      "value": "3010" },
+            { "name": "NODE_ENV",  "value": "production" },
+            { "name": "LOG_LEVEL", "value": "info" }
+          ],
+          "healthCheck": {
+            "command": ["CMD-SHELL", "wget -qO- http://localhost:3010/health || exit 1"],
+            "interval": 30, "timeout": 5, "retries": 3, "startPeriod": 15
+          },
+          "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+              "awslogs-group": "/ecs/cdh-bridge",
+              "awslogs-region": "eu-west-1",
+              "awslogs-stream-prefix": "mock-cdh"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "family": "cdh-bridge-event-collector",
+      "networkMode": "awsvpc",
+      "requiresCompatibilities": ["FARGATE"],
+      "cpu": "512",
+      "memory": "1024",
+      "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+      "containerDefinitions": [
+        {
+          "name": "event-collector",
+          "image": "ghcr.io/sunilmlodha/cdh-bridge-event-collector:latest",
+          "portMappings": [{ "containerPort": 3001, "protocol": "tcp" }],
+          "environment": [
+            { "name": "PORT",        "value": "3001" },
+            { "name": "NODE_ENV",    "value": "production" }
+          ],
+          "secrets": [
+            { "name": "REDIS_URL",             "valueFrom": "arn:aws:ssm:eu-west-1:ACCOUNT_ID:parameter/cdh-bridge/REDIS_URL" },
+            { "name": "KAFKA_BROKERS",          "valueFrom": "arn:aws:ssm:eu-west-1:ACCOUNT_ID:parameter/cdh-bridge/KAFKA_BROKERS" },
+            { "name": "PEGA_CDH_AUTH_TOKEN",    "valueFrom": "arn:aws:ssm:eu-west-1:ACCOUNT_ID:parameter/cdh-bridge/PEGA_CDH_AUTH_TOKEN" },
+            { "name": "JWT_SECRET",             "valueFrom": "arn:aws:ssm:eu-west-1:ACCOUNT_ID:parameter/cdh-bridge/JWT_SECRET" }
+          ],
+          "environment": [
+            { "name": "PORT",        "value": "3001" },
+            { "name": "NODE_ENV",    "value": "production" },
+            { "name": "PEGA_CDH_URL","value": "http://mock-cdh.cdh-bridge.internal:3010" }
+          ],
+          "healthCheck": {
+            "command": ["CMD-SHELL", "wget -qO- http://localhost:3001/health || exit 1"],
+            "interval": 30, "timeout": 5, "retries": 3, "startPeriod": 30
+          },
+          "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+              "awslogs-group": "/ecs/cdh-bridge",
+              "awslogs-region": "eu-west-1",
+              "awslogs-stream-prefix": "event-collector"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "family": "cdh-bridge-profile-router",
+      "networkMode": "awsvpc",
+      "requiresCompatibilities": ["FARGATE"],
+      "cpu": "512",
+      "memory": "1024",
+      "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+      "containerDefinitions": [
+        {
+          "name": "profile-router",
+          "image": "ghcr.io/sunilmlodha/cdh-bridge-profile-router:latest",
+          "portMappings": [{ "containerPort": 3002, "protocol": "tcp" }],
+          "secrets": [
+            { "name": "REDIS_URL",          "valueFrom": "arn:aws:ssm:eu-west-1:ACCOUNT_ID:parameter/cdh-bridge/REDIS_URL" },
+            { "name": "KAFKA_BROKERS",      "valueFrom": "arn:aws:ssm:eu-west-1:ACCOUNT_ID:parameter/cdh-bridge/KAFKA_BROKERS" },
+            { "name": "PEGA_CDH_AUTH_TOKEN","valueFrom": "arn:aws:ssm:eu-west-1:ACCOUNT_ID:parameter/cdh-bridge/PEGA_CDH_AUTH_TOKEN" }
+          ],
+          "environment": [
+            { "name": "PORT",        "value": "3002" },
+            { "name": "NODE_ENV",    "value": "production" },
+            { "name": "PEGA_CDH_URL","value": "http://mock-cdh.cdh-bridge.internal:3010" }
+          ],
+          "healthCheck": {
+            "command": ["CMD-SHELL", "wget -qO- http://localhost:3002/health || exit 1"],
+            "interval": 30, "timeout": 5, "retries": 3, "startPeriod": 30
+          },
+          "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+              "awslogs-group": "/ecs/cdh-bridge",
+              "awslogs-region": "eu-west-1",
+              "awslogs-stream-prefix": "profile-router"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

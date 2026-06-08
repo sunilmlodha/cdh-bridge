@@ -1,0 +1,54 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cdh-bridge-ingress
+  namespace: cdh-bridge
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - api.cdh-bridge.yourdomain.com
+      secretName: cdh-bridge-tls
+  rules:
+    - host: api.cdh-bridge.yourdomain.com
+      http:
+        paths:
+          - path: /mock-cdh(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: mock-cdh-service
+                port: { number: 3010 }
+          - path: /events(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: event-collector-service
+                port: { number: 3001 }
+          - path: /profiles(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: profile-router-service
+                port: { number: 3002 }
+          - path: /feedback(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: feedback-loop-service
+                port: { number: 3003 }
+          - path: /consent(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: consent-service-service
+                port: { number: 3004 }
+          - path: /connectors(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: connector-service-service
+                port: { number: 3005 }

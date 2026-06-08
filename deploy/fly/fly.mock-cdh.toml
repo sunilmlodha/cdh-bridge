@@ -1,0 +1,48 @@
+app       = "cdh-bridge-mock-cdh"
+primary_region = "lhr"
+
+[build]
+  image = "ghcr.io/sunilmlodha/cdh-bridge-mock-cdh:latest"
+
+[env]
+  PORT     = "3010"
+  NODE_ENV = "production"
+  LOG_LEVEL = "info"
+
+[[services]]
+  internal_port = 3010
+  protocol      = "tcp"
+  auto_stop_machines  = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[services.ports]]
+    handlers = ["http"]
+    port     = 80
+    force_https = true
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port     = 443
+
+  [services.concurrency]
+    type       = "connections"
+    hard_limit = 100
+    soft_limit = 80
+
+  [[services.tcp_checks]]
+    grace_period  = "10s"
+    interval      = "15s"
+    restart_limit = 0
+    timeout       = "5s"
+
+  [[services.http_checks]]
+    interval      = "15s"
+    grace_period  = "10s"
+    method        = "GET"
+    path          = "/health"
+    timeout       = "5s"
+    tls_skip_verify = false
+
+[resources]
+  memory = "256mb"

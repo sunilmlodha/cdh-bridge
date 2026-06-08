@@ -1,0 +1,39 @@
+name: Deploy to Railway
+
+on:
+  workflow_run:
+    workflows: ["Build & Push Docker Images"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'production'
+        type: choice
+        options: [production, staging]
+
+jobs:
+  deploy:
+    name: Deploy to Railway (${{ github.event.inputs.environment || 'production' }})
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway up --service event-collector  --detach
+          railway up --service profile-router   --detach
+          railway up --service feedback-loop    --detach
+          railway up --service consent-service  --detach
+          railway up --service connector-service --detach
+          railway up --service mock-cdh         --detach
+          echo "All services deployed. Check https://railway.app/dashboard"

@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: profile-router
+  namespace: cdh-bridge
+  labels:
+    app: profile-router
+    version: latest
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: profile-router
+  template:
+    metadata:
+      labels:
+        app: profile-router
+    spec:
+      containers:
+        - name: profile-router
+          image: ghcr.io/sunilmlodha/cdh-bridge-profile-router:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3002
+          env:
+            - name: PORT
+              value: "3002"
+            - name: NODE_ENV
+              value: "production"
+            - name: LOG_LEVEL
+              value: "info"
+            - name: MOCK_DATA
+              value: "true"
+          envFrom:
+            - secretRef:
+                name: cdh-bridge-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3002
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3002
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      imagePullSecrets:
+        - name: ghcr-secret   # kubectl create secret docker-registry ghcr-secret ...
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: profile-router-service
+  namespace: cdh-bridge
+spec:
+  selector:
+    app: profile-router
+  ports:
+    - port: 3002
+      targetPort: 3002
+      protocol: TCP
+  type: ClusterIP

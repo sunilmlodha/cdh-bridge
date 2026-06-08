@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mock-cdh
+  namespace: cdh-bridge
+  labels:
+    app: mock-cdh
+    version: latest
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mock-cdh
+  template:
+    metadata:
+      labels:
+        app: mock-cdh
+    spec:
+      containers:
+        - name: mock-cdh
+          image: ghcr.io/sunilmlodha/cdh-bridge-mock-cdh:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3010
+          env:
+            - name: PORT
+              value: "3010"
+            - name: NODE_ENV
+              value: "production"
+            - name: LOG_LEVEL
+              value: "info"
+            - name: MOCK_DATA
+              value: "true"
+          envFrom:
+            - secretRef:
+                name: cdh-bridge-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3010
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3010
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      imagePullSecrets:
+        - name: ghcr-secret   # kubectl create secret docker-registry ghcr-secret ...
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mock-cdh-service
+  namespace: cdh-bridge
+spec:
+  selector:
+    app: mock-cdh
+  ports:
+    - port: 3010
+      targetPort: 3010
+      protocol: TCP
+  type: ClusterIP

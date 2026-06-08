@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cdh-bridge
+  labels:
+    app.kubernetes.io/name: cdh-bridge
+    app.kubernetes.io/managed-by: kubectl

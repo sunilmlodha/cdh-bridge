@@ -1,0 +1,96 @@
+# Railway deployment — uses pre-built images from GHCR
+# Run: railway up (from this directory)
+# Prerequisite: railway login && railway link <project-id>
+
+services:
+
+  # ── Managed infrastructure (use Railway addons instead) ──────────────────
+  # In Railway dashboard: add Redis plugin + Kafka plugin to your project
+  # Railway injects REDIS_URL and KAFKA_URL automatically
+
+  # ── CDH Bridge Services ──────────────────────────────────────────────────
+  mock-cdh:
+    image: ghcr.io/sunilmlodha/cdh-bridge-mock-cdh:latest
+    restart: unless-stopped
+    environment:
+      PORT: "3010"
+      NODE_ENV: production
+      LOG_LEVEL: info
+    ports:
+      - "3010:3010"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3010/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  event-collector:
+    image: ghcr.io/sunilmlodha/cdh-bridge-event-collector:latest
+    restart: unless-stopped
+    environment:
+      PORT: "3001"
+      KAFKA_BROKERS: $KAFKA_URL
+      REDIS_URL: $REDIS_URL
+      PEGA_CDH_URL: $PEGA_CDH_URL
+      PEGA_CDH_AUTH_TOKEN: $PEGA_CDH_AUTH_TOKEN
+      JWT_SECRET: $JWT_SECRET
+      CORS_ORIGINS: $CORS_ORIGINS
+      NODE_ENV: production
+    ports:
+      - "3001:3001"
+    depends_on:
+      mock-cdh:
+        condition: service_healthy
+
+  profile-router:
+    image: ghcr.io/sunilmlodha/cdh-bridge-profile-router:latest
+    restart: unless-stopped
+    environment:
+      PORT: "3002"
+      KAFKA_BROKERS: $KAFKA_URL
+      REDIS_URL: $REDIS_URL
+      PEGA_CDH_URL: $PEGA_CDH_URL
+      PEGA_CDH_AUTH_TOKEN: $PEGA_CDH_AUTH_TOKEN
+      NODE_ENV: production
+    ports:
+      - "3002:3002"
+    depends_on:
+      mock-cdh:
+        condition: service_healthy
+
+  feedback-loop:
+    image: ghcr.io/sunilmlodha/cdh-bridge-feedback-loop:latest
+    restart: unless-stopped
+    environment:
+      PORT: "3003"
+      KAFKA_BROKERS: $KAFKA_URL
+      REDIS_URL: $REDIS_URL
+      PEGA_CDH_URL: $PEGA_CDH_URL
+      NODE_ENV: production
+    ports:
+      - "3003:3003"
+
+  consent-service:
+    image: ghcr.io/sunilmlodha/cdh-bridge-consent-service:latest
+    restart: unless-stopped
+    environment:
+      PORT: "3004"
+      KAFKA_BROKERS: $KAFKA_URL
+      REDIS_URL: $REDIS_URL
+      PEGA_CDH_URL: $PEGA_CDH_URL
+      NODE_ENV: production
+    ports:
+      - "3004:3004"
+
+  connector-service:
+    image: ghcr.io/sunilmlodha/cdh-bridge-connector-service:latest
+    restart: unless-stopped
+    environment:
+      PORT: "3005"
+      KAFKA_BROKERS: $KAFKA_URL
+      REDIS_URL: $REDIS_URL
+      PEGA_CDH_URL: $PEGA_CDH_URL
+      NODE_ENV: production
+      MOCK_DATA: "true"
+    ports:
+      - "3005:3005"

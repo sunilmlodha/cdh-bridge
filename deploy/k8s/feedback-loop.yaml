@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: feedback-loop
+  namespace: cdh-bridge
+  labels:
+    app: feedback-loop
+    version: latest
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: feedback-loop
+  template:
+    metadata:
+      labels:
+        app: feedback-loop
+    spec:
+      containers:
+        - name: feedback-loop
+          image: ghcr.io/sunilmlodha/cdh-bridge-feedback-loop:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3003
+          env:
+            - name: PORT
+              value: "3003"
+            - name: NODE_ENV
+              value: "production"
+            - name: LOG_LEVEL
+              value: "info"
+            - name: MOCK_DATA
+              value: "true"
+          envFrom:
+            - secretRef:
+                name: cdh-bridge-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3003
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3003
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      imagePullSecrets:
+        - name: ghcr-secret   # kubectl create secret docker-registry ghcr-secret ...
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: feedback-loop-service
+  namespace: cdh-bridge
+spec:
+  selector:
+    app: feedback-loop
+  ports:
+    - port: 3003
+      targetPort: 3003
+      protocol: TCP
+  type: ClusterIP
