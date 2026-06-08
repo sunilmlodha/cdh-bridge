@@ -20,6 +20,8 @@
     { "source": "/mobile", "destination": "/mobile/index.html" },
     { "source": "/citadele", "destination": "/citadele/index.html" },
     { "source": "/citadele/web", "destination": "/citadele/web/index.html" },
-    { "source": "/citadele/mobile", "destination": "/citadele/mobile/index.html" }
+    { "source": "/citadele/mobile", "destination": "/citadele/mobile/index.html" },
+    { "source": "/cookbook", "destination": "/cookbook.html" },
+    { "source": "/cookbook/print", "destination": "/cookbook-print.html" }
   ]
 }

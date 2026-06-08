@@ -1,0 +1,1950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CDH Bridge | DCS Team Cookbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<style>
+:root {
+  --navy: #003A61;
+  --blue: #0063AB;
+  --green: #16A34A;
+  --orange: #D97706;
+  --bg: #F8FAFC;
+  --sidebar-width: 260px;
+  --text: #1E293B;
+  --text-muted: #64748B;
+  --border: #E2E8F0;
+  --code-bg: #1E293B;
+  --card-bg: #FFFFFF;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; font-size: 15px; }
+
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ── SIDEBAR ── */
+#sidebar {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  background: var(--navy);
+  color: #CBD5E1;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  flex-shrink: 0;
+}
+
+#sidebar::-webkit-scrollbar { width: 4px; }
+#sidebar::-webkit-scrollbar-track { background: transparent; }
+#sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+
+.sidebar-logo {
+  padding: 20px 16px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.sidebar-logo .logo-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+
+.sidebar-logo .logo-sub {
+  font-size: 0.72rem;
+  color: #94A3B8;
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.sidebar-logo .version-badge {
+  display: inline-block;
+  margin-top: 8px;
+  background: rgba(0,99,171,0.5);
+  border: 1px solid rgba(0,99,171,0.8);
+  color: #93C5FD;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.sidebar-search {
+  padding: 12px 12px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.sidebar-search input {
+  width: 100%;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 6px;
+  padding: 7px 10px 7px 30px;
+  color: #E2E8F0;
+  font-size: 0.78rem;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  transition: border-color 0.15s;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2.5'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 9px center;
+}
+
+.sidebar-search input:focus {
+  border-color: rgba(0,99,171,0.7);
+  background-color: rgba(255,255,255,0.1);
+}
+
+.sidebar-search input::placeholder { color: #64748B; }
+
+nav { padding: 8px 0 24px; flex: 1; }
+
+nav a {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 16px;
+  color: #94A3B8;
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 400;
+  transition: all 0.15s;
+  border-left: 2px solid transparent;
+  line-height: 1.3;
+}
+
+nav a .nav-icon { font-size: 0.9rem; flex-shrink: 0; }
+
+nav a:hover {
+  color: #E2E8F0;
+  background: rgba(255,255,255,0.05);
+}
+
+nav a.active {
+  color: #fff;
+  background: rgba(0,99,171,0.25);
+  border-left-color: #0063AB;
+  font-weight: 500;
+}
+
+nav a.hidden { display: none; }
+
+/* ── MAIN CONTENT ── */
+#main {
+  flex: 1;
+  overflow-x: hidden;
+  min-width: 0;
+}
+
+.content-inner {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 48px 48px 120px;
+}
+
+/* ── SECTIONS ── */
+.section {
+  margin-bottom: 72px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--border);
+}
+
+.section-icon {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.section-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: -0.02em;
+}
+
+h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 28px 0 12px;
+}
+
+h4 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 20px 0 8px;
+}
+
+p {
+  line-height: 1.7;
+  color: #374151;
+  margin-bottom: 14px;
+  font-size: 0.92rem;
+}
+
+/* ── CODE BLOCKS ── */
+.code-wrap {
+  position: relative;
+  margin: 14px 0 20px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #0F172A;
+  padding: 8px 14px;
+  border-bottom: 1px solid #1E293B;
+}
+
+.code-lang {
+  font-size: 0.7rem;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 5px;
+  color: #94A3B8;
+  font-size: 0.72rem;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.copy-btn:hover { background: rgba(255,255,255,0.12); color: #E2E8F0; }
+.copy-btn.copied { color: #4ADE80; border-color: rgba(74,222,128,0.3); }
+
+.code-wrap pre[class*="language-"] {
+  margin: 0;
+  border-radius: 0;
+  background: #1A2332 !important;
+  padding: 16px 18px;
+  font-size: 0.82rem;
+  line-height: 1.65;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── CALLOUT BOXES ── */
+.callout {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  margin: 14px 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.callout-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+
+.callout.warning {
+  background: #FFF7ED;
+  border: 1px solid #FED7AA;
+  color: #92400E;
+}
+
+.callout.info {
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  color: #1E40AF;
+}
+
+.callout.success {
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  color: #14532D;
+}
+
+.callout.tip {
+  background: #F5F3FF;
+  border: 1px solid #DDD6FE;
+  color: #4C1D95;
+}
+
+/* ── TABLES ── */
+.table-wrap {
+  overflow-x: auto;
+  margin: 14px 0 20px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.83rem;
+}
+
+thead th {
+  background: var(--navy);
+  color: #E2E8F0;
+  font-weight: 600;
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+tbody tr { border-bottom: 1px solid var(--border); }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:nth-child(even) { background: #F8FAFC; }
+tbody tr:hover { background: #EFF6FF; }
+
+tbody td {
+  padding: 9px 14px;
+  color: var(--text);
+  vertical-align: top;
+  line-height: 1.5;
+}
+
+tbody td code {
+  background: #EEF2FF;
+  color: #3730A3;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8em;
+}
+
+/* ── URL CARDS ── */
+.url-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+  margin: 14px 0;
+}
+
+.url-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  text-decoration: none;
+  color: var(--text);
+  transition: all 0.15s;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  box-shadow: var(--shadow);
+}
+
+.url-card:hover {
+  border-color: var(--blue);
+  box-shadow: 0 4px 12px rgba(0,99,171,0.12);
+  transform: translateY(-1px);
+}
+
+.url-card-icon {
+  font-size: 1.2rem;
+  margin-top: 1px;
+}
+
+.url-card-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 2px;
+}
+
+.url-card-url {
+  font-size: 0.73rem;
+  color: var(--blue);
+  font-family: 'JetBrains Mono', monospace;
+  word-break: break-all;
+}
+
+/* ── STEPS ── */
+.steps { margin: 14px 0; }
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.step-num {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  background: var(--blue);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.step-content { flex: 1; }
+.step-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 8px; color: var(--navy); }
+
+/* ── SERVICE STATUS TABLE ── */
+.status-ok { color: var(--green); font-weight: 600; }
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #F0FDF4;
+  color: var(--green);
+  border: 1px solid #BBF7D0;
+  border-radius: 20px;
+  padding: 2px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* ── ARCH DIAGRAM ── */
+.arch-diagram {
+  background: #0F172A;
+  color: #94A3B8;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  line-height: 1.7;
+  padding: 20px 24px;
+  border-radius: 8px;
+  overflow-x: auto;
+  box-shadow: var(--shadow-md);
+  border: 1px solid #1E293B;
+  margin: 14px 0;
+}
+
+.arch-diagram .hl { color: #38BDF8; }
+.arch-diagram .hl2 { color: #4ADE80; }
+.arch-diagram .hl3 { color: #FB923C; }
+
+/* ── OUTCOME BADGES ── */
+.badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 14px; }
+.badge {
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+}
+.badge-green { background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0; }
+.badge-red { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
+.badge-gray { background: #F1F5F9; color: #475569; border: 1px solid #CBD5E1; }
+.badge-blue { background: #EFF6FF; color: #1E40AF; border: 1px solid #BFDBFE; }
+.badge-orange { background: #FFF7ED; color: #92400E; border: 1px solid #FED7AA; }
+
+/* ── PORT PILL ── */
+.port-pill {
+  display: inline-block;
+  background: #EEF2FF;
+  color: #3730A3;
+  border: 1px solid #C7D2FE;
+  border-radius: 20px;
+  padding: 2px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+/* ── BACK TO TOP ── */
+#back-to-top {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  background: var(--navy);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  z-index: 200;
+}
+
+#back-to-top:hover { background: var(--blue); transform: translateY(-2px); }
+#back-to-top.visible { display: flex; }
+
+/* ── CONNECTOR TYPES ── */
+.connector-badge {
+  display: inline-block;
+  background: #F0F9FF;
+  color: #0C4A6E;
+  border: 1px solid #BAE6FD;
+  border-radius: 4px;
+  padding: 1px 8px;
+  font-size: 0.75rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+}
+
+/* ── DIVIDER ── */
+.section-divider {
+  height: 1px;
+  background: linear-gradient(to right, var(--border), transparent);
+  margin: 32px 0;
+}
+
+/* ── INLINE CODE ── */
+code:not([class]) {
+  background: #EEF2FF;
+  color: #3730A3;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85em;
+}
+
+/* ── PRINT ── */
+@media print {
+  #sidebar, #back-to-top { display: none !important; }
+  #main { margin-left: 0; }
+  .content-inner { padding: 20px; }
+  .code-wrap { box-shadow: none; border: 1px solid #ddd; }
+  .copy-btn { display: none; }
+  a[href]::after { content: " (" attr(href) ")"; font-size: 0.75em; color: #64748B; }
+  .section { page-break-inside: avoid; }
+}
+
+@media (max-width: 768px) {
+  #sidebar { display: none; }
+  .content-inner { padding: 24px 20px 80px; }
+}
+
+/* ── FEATURE HEADER ── */
+.feature-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--blue);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.feature-meta .desc { font-size: 0.87rem; color: #374151; line-height: 1.5; flex: 1; min-width: 200px; }
+
+/* ── RECIPE HEADER ── */
+.recipe {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin: 20px 0;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.recipe-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: #F8FAFC;
+  border-bottom: 1px solid var(--border);
+}
+
+.recipe-num {
+  background: var(--blue);
+  color: white;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.recipe-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.recipe-body { padding: 14px 16px; }
+.recipe-body > *:last-child { margin-bottom: 0; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-title">CDH Bridge</div>
+    <div class="logo-sub">DCS Team Cookbook</div>
+    <span class="version-badge">v0.1.0</span>
+  </div>
+
+  <div class="sidebar-search">
+    <input type="text" id="nav-search" placeholder="Search sections…" autocomplete="off">
+  </div>
+
+  <nav id="sidebar-nav">
+    <a href="#quick-start" class="nav-link"><span class="nav-icon">🚀</span> Quick Start</a>
+    <a href="#architecture" class="nav-link"><span class="nav-icon">🏗️</span> Architecture</a>
+    <a href="#event-collector" class="nav-link"><span class="nav-icon">📡</span> Event Collector</a>
+    <a href="#profile-router" class="nav-link"><span class="nav-icon">👤</span> Profile Router</a>
+    <a href="#feedback-loop" class="nav-link"><span class="nav-icon">🔄</span> Feedback Loop</a>
+    <a href="#consent-service" class="nav-link"><span class="nav-icon">🔒</span> Consent Service</a>
+    <a href="#connectors" class="nav-link"><span class="nav-icon">🔌</span> Connectors</a>
+    <a href="#identity-resolution" class="nav-link"><span class="nav-icon">🔗</span> Identity Resolution</a>
+    <a href="#nexusjs-sdk" class="nav-link"><span class="nav-icon">📱</span> NexusJS SDK</a>
+    <a href="#demo-scenarios" class="nav-link"><span class="nav-icon">🎬</span> Demo Scenarios</a>
+    <a href="#deployment" class="nav-link"><span class="nav-icon">🚢</span> Deployment</a>
+    <a href="#troubleshooting" class="nav-link"><span class="nav-icon">🔧</span> Troubleshooting</a>
+  </nav>
+</aside>
+
+<!-- MAIN -->
+<main id="main">
+<div class="content-inner">
+
+<!-- ═══════════════════════════════ SECTION 1 ═══════════════════════════════ -->
+<section class="section" id="quick-start">
+  <div class="section-header">
+    <span class="section-icon">🚀</span>
+    <h2 class="section-title">Quick Start</h2>
+  </div>
+
+  <h3>Local Development <small style="font-weight:400;color:var(--text-muted);font-size:0.85rem;">(5 minutes)</small></h3>
+
+  <div class="callout warning">
+    <span class="callout-icon">⚠️</span>
+    <div><strong>Prerequisites</strong><br>
+      • Docker Desktop installed and running<br>
+      • Node.js 18+ (for scripts)<br>
+      • Git
+    </div>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <div class="step-title">Clone and start</div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+          <pre class="language-bash"><code>git clone https://github.com/sunilmlodha/cdh-bridge
+cd cdh-bridge
+cp .env.example .env
+docker compose up -d</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <div class="step-title">Verify all services</div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+          <pre class="language-bash"><code>node scripts/health-check.js</code></pre>
+        </div>
+        <div class="table-wrap" style="margin-top:12px;">
+          <table>
+            <thead><tr><th>Service</th><th>Port</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>Mock Pega CDH</td><td><code>3010</code></td><td><span class="status-badge">✅ healthy</span></td></tr>
+              <tr><td>Event Collector</td><td><code>3001</code></td><td><span class="status-badge">✅ healthy</span></td></tr>
+              <tr><td>Profile Router</td><td><code>3002</code></td><td><span class="status-badge">✅ healthy</span></td></tr>
+              <tr><td>Feedback Loop</td><td><code>3003</code></td><td><span class="status-badge">✅ healthy</span></td></tr>
+              <tr><td>Consent Service</td><td><code>3004</code></td><td><span class="status-badge">✅ healthy</span></td></tr>
+              <tr><td>Connector Service</td><td><code>3005</code></td><td><span class="status-badge">✅ healthy</span></td></tr>
+              <tr><td>Dashboard</td><td><code>3000</code></td><td><span class="status-badge">✅ healthy</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <div class="step-title">Seed demo data</div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+          <pre class="language-bash"><code>node scripts/seed-data.js</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <div class="step-title">Open dashboard</div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+          <pre class="language-bash"><code>open http://localhost:3000</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Cloud Access <small style="font-weight:400;color:var(--text-muted);font-size:0.85rem;">(always available)</small></h3>
+
+  <div class="url-grid">
+    <a class="url-card" href="https://cdh-bridge-dashboard.vercel.app" target="_blank">
+      <span class="url-card-icon">📊</span>
+      <div><div class="url-card-label">Dashboard</div><div class="url-card-url">cdh-bridge-dashboard.vercel.app</div></div>
+    </a>
+    <a class="url-card" href="https://cdh-bridge-demos.vercel.app" target="_blank">
+      <span class="url-card-icon">🎮</span>
+      <div><div class="url-card-label">Demo Suite</div><div class="url-card-url">cdh-bridge-demos.vercel.app</div></div>
+    </a>
+    <a class="url-card" href="https://cdh-bridge-demos.vercel.app/web" target="_blank">
+      <span class="url-card-icon">🌐</span>
+      <div><div class="url-card-label">DemoBank Web</div><div class="url-card-url">cdh-bridge-demos.vercel.app/web</div></div>
+    </a>
+    <a class="url-card" href="https://cdh-bridge-demos.vercel.app/mobile" target="_blank">
+      <span class="url-card-icon">📱</span>
+      <div><div class="url-card-label">DemoBank Mobile</div><div class="url-card-url">cdh-bridge-demos.vercel.app/mobile</div></div>
+    </a>
+    <a class="url-card" href="https://cdh-bridge-demos.vercel.app/citadele/web" target="_blank">
+      <span class="url-card-icon">🏦</span>
+      <div><div class="url-card-label">Citadele Web</div><div class="url-card-url">cdh-bridge-demos.vercel.app/citadele/web</div></div>
+    </a>
+    <a class="url-card" href="https://cdh-bridge-demos.vercel.app/citadele/mobile" target="_blank">
+      <span class="url-card-icon">📲</span>
+      <div><div class="url-card-label">Citadele Mobile</div><div class="url-card-url">cdh-bridge-demos.vercel.app/citadele/mobile</div></div>
+    </a>
+    <a class="url-card" href="https://github.com/sunilmlodha/cdh-bridge" target="_blank">
+      <span class="url-card-icon">⬡</span>
+      <div><div class="url-card-label">GitHub Repository</div><div class="url-card-url">github.com/sunilmlodha/cdh-bridge</div></div>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SECTION 2 ═══════════════════════════════ -->
+<section class="section" id="architecture">
+  <div class="section-header">
+    <span class="section-icon">🏗️</span>
+    <h2 class="section-title">Architecture</h2>
+  </div>
+
+  <p>CDH Bridge is a microservices middleware layer that sits between your customer touchpoints and Pega CDH. Each service handles one responsibility, communicates via Kafka, and exposes a clean REST API.</p>
+
+  <div class="arch-diagram">
+<span class="hl">Customer Touchpoints</span>          <span class="hl2">CDH Bridge</span>                    <span class="hl3">Pega CDH</span>
+──────────────────           ───────────                   ────────
+Web / Mobile SDK  ──────►  <span class="hl2">Event Collector</span> :3001  ──────►  IH Events
+CRM (Salesforce)  ──────►  <span class="hl2">Connector Pack</span>  :3005  ──────►
+DWH (Snowflake)   ──────►  <span class="hl2">Profile Router</span>  :3002  ──────►  Customer Profile
+Call Centre       ──────►       │
+                               Kafka
+                           (cdh-events,                    <span class="hl3">NBA Engine</span>
+                            cdh-profiles,                       │
+                            cdh-consent,                        ▼
+                            cdh-feedback)            <span class="hl2">Feedback Loop</span> :3003
+                                                     <span class="hl2">Consent Svc</span>   :3004
+  </div>
+
+  <h3>Service Summary</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Service</th><th>Port</th><th>Responsibility</th><th>Key Endpoint</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Event Collector</strong></td><td><code>3001</code></td><td>Ingest &amp; map behavioural events → IH schema → Kafka</td><td><code>POST /v1/events</code></td></tr>
+        <tr><td><strong>Profile Router</strong></td><td><code>3002</code></td><td>Unified customer profile store in Redis; dedup &amp; merge</td><td><code>GET /v1/profiles/:id</code></td></tr>
+        <tr><td><strong>Feedback Loop</strong></td><td><code>3003</code></td><td>Record NBA outcomes; calculate lift vs baseline</td><td><code>POST /v1/feedback</code></td></tr>
+        <tr><td><strong>Consent Service</strong></td><td><code>3004</code></td><td>Propagate opt-out/GDPR/CCPA with audit trail</td><td><code>POST /v1/consent/optout</code></td></tr>
+        <tr><td><strong>Connector Service</strong></td><td><code>3005</code></td><td>15 pre-built connectors: CRM, DWH, CCaaS → Kafka</td><td><code>GET /v1/connectors</code></td></tr>
+        <tr><td><strong>Mock Pega CDH</strong></td><td><code>3010</code></td><td>Simulates Pega CDH API for local dev &amp; demos</td><td><code>POST /api/events</code></td></tr>
+        <tr><td><strong>Dashboard</strong></td><td><code>3000</code></td><td>Real-time monitoring UI (Next.js)</td><td><code>GET /</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Kafka Topics</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Topic</th><th>Producer</th><th>Consumer</th><th>Payload</th></tr></thead>
+      <tbody>
+        <tr><td><code>cdh-events</code></td><td>Event Collector</td><td>Mock Pega CDH</td><td>IH Event objects</td></tr>
+        <tr><td><code>cdh-profiles</code></td><td>Profile Router, Connectors</td><td>Profile Router</td><td>Unified profile deltas</td></tr>
+        <tr><td><code>cdh-consent</code></td><td>Consent Service</td><td>All services</td><td>Consent change events</td></tr>
+        <tr><td><code>cdh-feedback</code></td><td>Feedback Loop</td><td>Profile Router</td><td>NBA outcome records</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout info">
+    <span class="callout-icon">ℹ️</span>
+    <div><strong>Local dev uses KafkaJS with an in-process broker mock.</strong> You don't need a real Kafka cluster to run locally — the <code>KAFKA_MOCK=true</code> flag in <code>.env.example</code> enables this automatically.</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SECTION 3 ═══════════════════════════════ -->
+<section class="section" id="event-collector">
+  <div class="section-header">
+    <span class="section-icon">📡</span>
+    <h2 class="section-title">Feature 1: Event Collector <span class="port-pill">:3001</span></h2>
+  </div>
+
+  <div class="feature-meta">
+    <span style="font-size:1.4rem">📡</span>
+    <div class="desc">Receives behavioural events from any channel, maps them to Pega CDH Interaction History schema, and publishes to the <code>cdh-events</code> Kafka topic. Supports both real-time single events and high-throughput batch ingestion.</div>
+  </div>
+
+  <h3>CDH IH Event Type Mapping</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Your eventType</th><th>CDH IH Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>page_view</code></td><td><code>IH.WebBrowse</code></td><td>Customer browsed a page</td></tr>
+        <tr><td><code>product_view</code></td><td><code>IH.ProductView</code></td><td>Viewed a product detail page</td></tr>
+        <tr><td><code>app_open</code></td><td><code>IH.AppSession</code></td><td>Opened mobile app</td></tr>
+        <tr><td><code>form_submit</code></td><td><code>IH.Interaction</code></td><td>Submitted a form</td></tr>
+        <tr><td><code>purchase</code></td><td><code>IH.Conversion</code></td><td>Completed a purchase</td></tr>
+        <tr><td><code>call_start</code></td><td><code>IH.CallStart</code></td><td>Called contact centre</td></tr>
+        <tr><td><code>offer_accept</code></td><td><code>IH.OfferAccepted</code></td><td>Accepted an NBA offer</td></tr>
+        <tr><td><code>offer_reject</code></td><td><code>IH.OfferRejected</code></td><td>Rejected an NBA offer</td></tr>
+        <tr><td><code>login</code></td><td><code>IH.Login</code></td><td>Customer logged in</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num">1</div><div class="recipe-title">Track a web event</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code>curl -X POST http://localhost:3001/v1/events \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customerId": "CUST-001",
+    "eventType": "product_view",
+    "channel": "web",
+    "properties": {
+      "product": "home-loan",
+      "rate": "4.2%",
+      "page": "/products/mortgages"
+    }
+  }'</code></pre>
+      </div>
+      <p style="margin-top:10px;font-size:0.8rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">Expected Response</p>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">json</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-json"><code>{
+  "success": true,
+  "accepted": true,
+  "correlationId": "89202c7a-4f1b-4e3a-9c21-d8e7f3a1b002",
+  "ihEventType": "IH.ProductView",
+  "kafka": {
+    "topic": "cdh-events",
+    "partition": 0,
+    "offset": "42"
+  }
+}</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num">2</div><div class="recipe-title">Track an anonymous visitor (cookieId only)</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code>curl -X POST http://localhost:3001/v1/events \
+  -H "Content-Type: application/json" \
+  -d '{
+    "cookieId": "ck-abc123",
+    "eventType": "page_view",
+    "channel": "web",
+    "properties": { "page": "/home-loans" }
+  }'</code></pre>
+      </div>
+      <div class="callout info" style="margin-top:10px;">
+        <span class="callout-icon">ℹ️</span>
+        <div>Anonymous events are stored against the <code>cookieId</code> until a <code>login</code> event stitches them to a known <code>customerId</code>.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num">3</div><div class="recipe-title">Login event (triggers identity stitch)</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code>curl -X POST http://localhost:3001/v1/events \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customerId": "CUST-001",
+    "cookieId": "ck-abc123",
+    "eventType": "login",
+    "channel": "web"
+  }'</code></pre>
+      </div>
+      <div class="callout success" style="margin-top:10px;">
+        <span class="callout-icon">✅</span>
+        <div>This fires the <strong>identity stitch</strong> — all pre-login events from <code>ck-abc123</code> are merged into <code>CUST-001</code>'s Interaction History profile in Pega CDH.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num">4</div><div class="recipe-title">Batch events (high-throughput ingestion)</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code>curl -X POST http://localhost:3001/v1/events/batch \
+  -H "Content-Type: application/json" \
+  -d '{
+    "events": [
+      {
+        "customerId": "CUST-001",
+        "eventType": "page_view",
+        "channel": "web"
+      },
+      {
+        "customerId": "CUST-001",
+        "eventType": "product_view",
+        "channel": "web",
+        "properties": { "product": "home-loan" }
+      }
+    ]
+  }'</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num">5</div><div class="recipe-title">Get CDH IH schema reference</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code>curl http://localhost:3001/v1/events/schema</code></pre>
+      </div>
+      <p style="font-size:0.85rem;color:var(--text-muted);margin-top:8px;">Returns the full JSON schema for all supported IH event types, including required/optional fields per type.</p>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num">6</div><div class="recipe-title">Check service health</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code>curl http://localhost:3001/health</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SECTION 4 ═══════════════════════════════ -->
+<section class="section" id="profile-router">
+  <div class="section-header">
+    <span class="section-icon">👤</span>
+    <h2 class="section-title">Feature 2: Profile Router <span class="port-pill">:3002</span></h2>
+  </div>
+
+  <div class="feature-meta">
+    <span style="font-size:1.4rem">👤</span>
+    <div class="desc">Maintains unified customer profiles in Redis. Fetches from all connected source systems, deduplicates, and serves to Pega CDH in sub-100ms. Merge conflicts are automatically resolved by confidence scoring; low-confidence merges are queued for review.</div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num">1</div><div class="recipe-title">Create / upsert a profile</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code>curl -X POST http://localhost:3002/v1/profiles \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customerId": "CUST-001",
+    "email": "alice@bank.com",
+    "phone": "+61 412 345 678",
+    "firstName": "Alice",
+    "lastName": "Smith",
+    "ltv": 84500,
+    "segments": ["HighValue", "MortgageHolder"],
+    "_source": "Salesforce"
+  }'</code></pre>
+      </div>
+      <p style="margin-top:10px;font-size:0.8rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">Response includes merge action</p>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">json</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-json"><code>{
+  "success": true,
+  "action": "CREATED",
+  "customerId": "CUST-001",
+  "confidence": 1.0
+}</code></pre>
+      </div>
+      <div class="badge-row">
+        <span class="badge badge-green">CREATED</span>
+        <span class="badge badge-blue">MERGED</span>
+        <span class="badge badge-orange">REVIEW_QUEUED</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num">2</div><div class="recipe-title">Get a unified profile</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code>curl http://localhost:3002/v1/profiles/CUST-001</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num">3</div><div class="recipe-title">Get profile stats</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code>curl http://localhost:3002/v1/profiles/stats</code></pre>
+      </div>
+      <p style="font-size:0.85rem;color:var(--text-muted);margin-top:8px;">Returns total profiles, merge rate, pending reviews, avg confidence score, and Redis memory usage.</p>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num">4</div><div class="recipe-title">Trigger manual profile merge (data enrichment)</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code>curl -X POST http://localhost:3002/v1/profiles/CUST-001/merge \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ltv": 92000,
+    "segments": ["Premium"],
+    "_source": "Snowflake"
+  }'</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num">5</div><div class="recipe-title">Delete a profile (GDPR erasure)</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code>curl -X DELETE http://localhost:3002/v1/profiles/CUST-001</code></pre>
+      </div>
+      <div class="callout warning" style="margin-top:10px;">
+        <span class="callout-icon">⚠️</span>
+        <div>This immediately removes all profile data from Redis and publishes a <code>PROFILE_DELETED</code> event to <code>cdh-profiles</code>. For full GDPR erasure, also trigger the <a href="#consent-service" style="color:var(--blue);">Consent Service</a> GDPR endpoint.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num">6</div><div class="recipe-title">Get profile change history</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code>curl http://localhost:3002/v1/profiles/CUST-001/history</code></pre>
+      </div>
+      <p style="font-size:0.85rem;color:var(--text-muted);margin-top:8px;">Returns a timestamped audit log of all field changes, source systems, and merge actions.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SECTION 5 ═══════════════════════════════ -->
+<section class="section" id="feedback-loop">
+  <div class="section-header">
+    <span class="section-icon">🔄</span>
+    <h2 class="section-title">Feature 3: Feedback Loop <span class="port-pill">:3003</span></h2>
+  </div>
+
+  <div class="feature-meta">
+    <span style="font-size:1.4rem">🔄</span>
+    <div class="desc">Records NBA decision outcomes (accept/reject/convert) and feeds them back to enrich customer profiles. Calculates NBA lift vs baseline — the core metric that proves CDH ROI in a demo.</div>
+  </div>
+
+  <h3>Outcome Types</h3>
+  <div class="badge-row">
+    <span class="badge badge-green">ACCEPTED</span>
+    <span class="badge badge-red">REJECTED</span>
+    <span class="badge badge-gray">IGNORED</span>
+    <span class="badge badge-blue">CONVERTED</span>
+    <span class="badge badge-orange">CLICKED</span>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num">1</div><div class="recipe-title">Record an NBA outcome</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code>curl -X POST http://localhost:3003/v1/feedback \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customerId": "CUST-001",
+    "decisionId": "nba-uuid-here",
+    "action": "HomeLoanOffer",
+    "treatment": "FeaturedRate4.2",
+    "outcome": "ACCEPTED",
+    "channel": "web",
+    "propensityScore": 0.87
+  }'</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num">2</div><div class="recipe-title">Get decision history for a customer</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code>curl http://localhost:3003/v1/feedback/CUST-001</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num">3</div><div class="recipe-title">Get NBA lift statistics</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code>curl http://localhost:3003/v1/feedback/lift</code></pre>
+      </div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">json</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-json"><code>{
+  "baselineAcceptanceRate": 0.12,
+  "currentAcceptanceRate": 0.31,
+  "liftPercentage": 158.3,
+  "byChannel": {
+    "web":    { "baseline": 0.10, "current": 0.28, "lift": 180.0 },
+    "mobile": { "baseline": 0.15, "current": 0.36, "lift": 140.0 },
+    "email":  { "baseline": 0.08, "current": 0.22, "lift": 175.0 }
+  }
+}</code></pre>
+      </div>
+      <div class="callout tip" style="margin-top:10px;">
+        <span class="callout-icon">💡</span>
+        <div><strong>Demo tip:</strong> Show this endpoint after running the demo scenario to demonstrate a 150%+ NBA lift. This is the headline number for the Pega CDH value story.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num">4</div><div class="recipe-title">Get overall stats</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code>curl http://localhost:3003/v1/feedback/stats</code></pre>
+      </div>
+      <p style="font-size:0.85rem;color:var(--text-muted);margin-top:8px;">Returns total decisions, acceptance count, rejection count, average propensity score, and top-performing actions.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SECTION 6 ═══════════════════════════════ -->
+<section class="section" id="consent-service">
+  <div class="section-header">
+    <span class="section-icon">🔒</span>
+    <h2 class="section-title">Feature 4: Consent Service <span class="port-pill">:3004</span></h2>
+  </div>
+
+  <div class="feature-meta">
+    <span style="font-size:1.4rem">🔒</span>
+    <div class="desc">Manages consent propagation. A single opt-out event fans out to Pega CDH + all connected systems in &lt;500ms. GDPR and CCPA compliant with an immutable, append-only audit trail stored in Redis Streams.</div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num">1</div><div class="recipe-title">Marketing opt-out</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code>curl -X POST http://localhost:3004/v1/consent/optout \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customerId": "CUST-001",
+    "channels": ["email", "sms"],
+    "source": "preference-centre"
+  }'</code></pre>
+      </div>
+      <div class="callout success" style="margin-top:10px;">
+        <span class="callout-icon">✅</span>
+        <div>Propagates to Pega CDH in &lt;500ms. All future CDH events for this customer suppress <strong>email</strong> and <strong>SMS</strong> channels automatically.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num">2</div><div class="recipe-title">GDPR Right to Erasure</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code>curl -X POST http://localhost:3004/v1/consent/gdpr-erasure \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customerId": "CUST-001",
+    "requestId": "gdpr-req-001",
+    "requestedAt": "2026-06-08T10:00:00Z",
+    "verificationToken": "verified"
+  }'</code></pre>
+      </div>
+      <div class="callout warning" style="margin-top:10px;">
+        <span class="callout-icon">⚠️</span>
+        <div>Triggers full erasure across Profile Router, Event Collector history, and Pega CDH. SLA: <strong>72 hours</strong> (configurable). Audit log is retained as an anonymised erasure record.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num">3</div><div class="recipe-title">CCPA Do Not Sell</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code>curl -X POST http://localhost:3004/v1/consent/ccpa-dns \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customerId": "CUST-001",
+    "requestId": "ccpa-req-001"
+  }'</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num">4</div><div class="recipe-title">Get consent status</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code>curl http://localhost:3004/v1/consent/CUST-001</code></pre>
+      </div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">json</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-json"><code>{
+  "customerId": "CUST-001",
+  "optedOutChannels": ["email", "sms"],
+  "gdprErasureRequested": false,
+  "ccpaDns": false,
+  "lastUpdated": "2026-06-08T10:00:00Z"
+}</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num">5</div><div class="recipe-title">List pending requests + SLA status</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code>curl http://localhost:3004/v1/consent/requests</code></pre>
+      </div>
+      <p style="font-size:0.85rem;color:var(--text-muted);margin-top:8px;">Returns all pending GDPR/CCPA requests with SLA countdown, status (PENDING / IN_PROGRESS / COMPLETED), and responsible systems.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SECTION 7 ═══════════════════════════════ -->
+<section class="section" id="connectors">
+  <div class="section-header">
+    <span class="section-icon">🔌</span>
+    <h2 class="section-title">Feature 5: Connector Service <span class="port-pill">:3005</span></h2>
+  </div>
+
+  <div class="feature-meta">
+    <span style="font-size:1.4rem">🔌</span>
+    <div class="desc">Manages 15 pre-built connectors that ingest customer data from CRM, DWH, CCaaS, and other systems. Each connector normalises source data and publishes unified profile events to the <code>cdh-profiles</code> Kafka topic.</div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num">1</div><div class="recipe-title">List all connectors</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code>curl http://localhost:3005/v1/connectors</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num">2</div><div class="recipe-title">Add a Salesforce connector</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code>curl -X POST http://localhost:3005/v1/connectors \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "salesforce",
+    "name": "Citadele Salesforce CRM",
+    "credentials": {
+      "instanceUrl": "https://citadele.my.salesforce.com",
+      "clientId": "YOUR_CLIENT_ID",
+      "clientSecret": "YOUR_CLIENT_SECRET"
+    },
+    "syncMode": "streaming",
+    "fieldMappings": [
+      { "source": "Contact.External_ID__c", "target": "customerId" },
+      { "source": "Contact.Email",           "target": "email" },
+      { "source": "Account.AnnualRevenue",   "target": "ltv" }
+    ]
+  }'</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num">3</div><div class="recipe-title">Test a connector</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code>curl -X POST http://localhost:3005/v1/connectors/conn-001/test</code></pre>
+      </div>
+      <p style="font-size:0.85rem;color:var(--text-muted);margin-top:8px;">Validates credentials, checks connectivity, and returns a sample record transformation without writing to Kafka.</p>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num">4</div><div class="recipe-title">Trigger manual sync</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code>curl -X POST http://localhost:3005/v1/connectors/conn-001/sync</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num">5</div><div class="recipe-title">Get connector logs</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code>curl http://localhost:3005/v1/connectors/conn-001/logs</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <h3>Connector Types Reference</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Type</th><th>Authentication</th><th>Sync Modes</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="connector-badge">salesforce</span></td>
+          <td>OAuth2 Client Credentials</td>
+          <td><code>streaming</code>, <code>batch</code></td>
+          <td>CDC via Platform Events</td>
+        </tr>
+        <tr>
+          <td><span class="connector-badge">snowflake</span></td>
+          <td>SQL API key</td>
+          <td><code>batch</code>, <code>streaming</code></td>
+          <td>Snowpipe for real-time</td>
+        </tr>
+        <tr>
+          <td><span class="connector-badge">s3</span></td>
+          <td>AWS IAM</td>
+          <td><code>batch</code></td>
+          <td>CSV/JSON, auto-detects gzip</td>
+        </tr>
+        <tr>
+          <td><span class="connector-badge">http-webhook</span></td>
+          <td>HMAC signature</td>
+          <td><code>streaming</code></td>
+          <td>Genesys, Twilio, Five9, etc.</td>
+        </tr>
+        <tr>
+          <td><span class="connector-badge">mock-salesforce</span></td>
+          <td>none</td>
+          <td><code>batch</code></td>
+          <td>Dev/demo mode (<code>MOCK_DATA=true</code>)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SECTION 8 ═══════════════════════════════ -->
+<section class="section" id="identity-resolution">
+  <div class="section-header">
+    <span class="section-icon">🔗</span>
+    <h2 class="section-title">Identity Resolution</h2>
+  </div>
+
+  <p>CDH Bridge resolves customer identity across anonymous sessions, authenticated sessions, and multi-system IDs using a probabilistic + deterministic matching engine built into the Profile Router.</p>
+
+  <h3>How It Works</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Match Type</th><th>Identifiers Used</th><th>Confidence</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Deterministic</strong></td><td>Exact email, phone, or externalId match</td><td>1.0</td><td>Auto-merge</td></tr>
+        <tr><td><strong>High Probabilistic</strong></td><td>Name + address + device fingerprint</td><td>0.85–0.99</td><td>Auto-merge</td></tr>
+        <tr><td><strong>Low Probabilistic</strong></td><td>Partial name or device only</td><td>0.50–0.84</td><td>Queue for review</td></tr>
+        <tr><td><strong>No Match</strong></td><td>Unknown identifiers</td><td>&lt;0.50</td><td>Create new profile</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Identity Stitch Flow</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-lang">text</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre class="language-text"><code>Anonymous Visit              Login Event              Post-Login
+─────────────────           ─────────────            ──────────────────────
+cookieId: ck-abc123   ───►  customerId: CUST-001  ►  Merged profile
+ 5 page views               cookieId:   ck-abc123    All 5 pre-login events
+ 2 product views                    │                attributed to CUST-001
+                               Identity              in Pega CDH IH
+                               Stitch API            segment updated</code></pre>
+  </div>
+
+  <h3>Trigger Identity Stitch Manually</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre class="language-bash"><code>curl -X POST http://localhost:3002/v1/profiles/stitch \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customerId": "CUST-001",
+    "cookieId": "ck-abc123",
+    "email": "alice@bank.com"
+  }'</code></pre>
+  </div>
+
+  <h3>Get Identity Graph for a Customer</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre class="language-bash"><code>curl http://localhost:3002/v1/profiles/CUST-001/identity-graph</code></pre>
+  </div>
+
+  <div class="callout info">
+    <span class="callout-icon">ℹ️</span>
+    <div>The identity graph returns all known identifiers for a customer across systems — cookies, device IDs, external CRM IDs, email hashes — and their match confidence scores.</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SECTION 9 ═══════════════════════════════ -->
+<section class="section" id="nexusjs-sdk">
+  <div class="section-header">
+    <span class="section-icon">📱</span>
+    <h2 class="section-title">NexusJS SDK</h2>
+  </div>
+
+  <p>NexusJS is a lightweight browser/Node SDK that wraps CDH Bridge APIs. Drop it into any web or mobile app to start tracking events and displaying NBA decisions.</p>
+
+  <h3>Installation</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre class="language-bash"><code>npm install @cdh-bridge/nexusjs
+# or via CDN
+&lt;script src="https://cdh-bridge-demos.vercel.app/sdk/nexus.min.js"&gt;&lt;/script&gt;</code></pre>
+  </div>
+
+  <h3>Initialise</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-lang">javascript</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre class="language-javascript"><code>import Nexus from '@cdh-bridge/nexusjs';
+
+const nexus = new Nexus({
+  eventCollectorUrl: 'https://your-cdh-bridge.com',
+  apiKey: 'YOUR_API_KEY',   // omit for local dev
+  debug: true               // logs events to console
+});
+
+// Set the current user (call after login)
+nexus.identify('CUST-001', {
+  email: 'alice@bank.com',
+  firstName: 'Alice'
+});</code></pre>
+  </div>
+
+  <h3>Track Events</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-lang">javascript</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre class="language-javascript"><code>// Track a page view
+nexus.track('page_view', { page: window.location.pathname });
+
+// Track a product view
+nexus.track('product_view', {
+  product: 'home-loan',
+  rate: '4.2%',
+  page: '/products/mortgages'
+});
+
+// Track an offer interaction
+nexus.track('offer_accept', {
+  decisionId: 'nba-uuid-here',
+  action: 'HomeLoanOffer',
+  treatment: 'FeaturedRate4.2'
+});</code></pre>
+  </div>
+
+  <h3>Auto-tracking (zero-config)</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-lang">javascript</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre class="language-javascript"><code>const nexus = new Nexus({
+  eventCollectorUrl: 'https://your-cdh-bridge.com',
+  autotrack: {
+    pageViews: true,        // tracks every route change
+    clicks: '[data-track]', // tracks clicks on data-track elements
+    forms: true             // tracks form submissions
+  }
+});
+
+// In your HTML:
+// &lt;button data-track="offer_accept" data-product="home-loan"&gt;Apply Now&lt;/button&gt;</code></pre>
+  </div>
+
+  <h3>React Hook</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-lang">javascript</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre class="language-javascript"><code>import { useNexus } from '@cdh-bridge/nexusjs/react';
+
+function ProductPage({ product }) {
+  const { track } = useNexus();
+
+  useEffect(() => {
+    track('product_view', { product: product.id });
+  }, [product.id]);
+
+  return &lt;div&gt;...&lt;/div&gt;;
+}</code></pre>
+  </div>
+
+  <div class="callout tip">
+    <span class="callout-icon">💡</span>
+    <div><strong>Demo tip:</strong> The NexusJS SDK is already embedded in the DemoBank and Citadele demo apps at <code>/sdk/nexus.js</code>. Open the browser dev tools console to see real-time event tracking logs.</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SECTION 10 ═══════════════════════════════ -->
+<section class="section" id="demo-scenarios">
+  <div class="section-header">
+    <span class="section-icon">🎬</span>
+    <h2 class="section-title">Demo Scenarios</h2>
+  </div>
+
+  <p>These are the recommended demo flows to use with clients. Run them after seeding data with <code>node scripts/seed-data.js</code>.</p>
+
+  <h3>Scenario A: Mortgage Journey (DemoBank)</h3>
+  <p>Shows a customer browsing → receiving a personalised mortgage offer → accepting → NBA lift metric improving.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <div class="step-title">Open DemoBank Web in incognito mode</div>
+        <p>Navigate to <a href="https://cdh-bridge-demos.vercel.app/web" target="_blank" style="color:var(--blue);">cdh-bridge-demos.vercel.app/web</a>. Browse the Home Loans page — anonymous events fire to the Event Collector.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <div class="step-title">Log in as Alice</div>
+        <p>Username: <code>alice@bank.com</code> / Password: <code>demo1234</code>. Identity stitch fires — all pre-login browsing is attributed to CUST-001.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <div class="step-title">Observe the NBA offer appear</div>
+        <p>Within 2–3 seconds, a personalised Home Loan offer appears in the dashboard widget. This is the Next Best Action from Mock Pega CDH based on Alice's profile + behaviour.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <div class="step-title">Accept the offer and check lift</div>
+        <p>Click "Apply Now". Then pull the lift metric:</p>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+          <pre class="language-bash"><code>curl http://localhost:3003/v1/feedback/lift</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Scenario B: Consent Propagation (Live Demo)</h3>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <div class="step-title">Send a marketing opt-out</div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+          <pre class="language-bash"><code>curl -X POST http://localhost:3004/v1/consent/optout \
+  -H "Content-Type: application/json" \
+  -d '{"customerId":"CUST-001","channels":["email","sms"],"source":"demo"}'</code></pre>
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <div class="step-title">Check Mock Pega CDH received it</div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+          <pre class="language-bash"><code>curl http://localhost:3010/api/consent/CUST-001</code></pre>
+        </div>
+        <p style="margin-top:8px;font-size:0.85rem;color:var(--text-muted);">Response shows <code>suppressedChannels: ["email","sms"]</code> — proving sub-500ms propagation.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3>Scenario C: Multi-System Profile (Connector Demo)</h3>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <div class="step-title">Seed a profile from Salesforce mock</div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+          <pre class="language-bash"><code>curl -X POST http://localhost:3005/v1/connectors/mock-salesforce/sync</code></pre>
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <div class="step-title">Enrich with Snowflake LTV data</div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+          <pre class="language-bash"><code>curl -X POST http://localhost:3002/v1/profiles/CUST-001/merge \
+  -H "Content-Type: application/json" \
+  -d '{"ltv":125000,"segments":["Platinum"],"_source":"Snowflake"}'</code></pre>
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <div class="step-title">Show unified profile in dashboard</div>
+        <p>Open <a href="http://localhost:3000" target="_blank" style="color:var(--blue);">localhost:3000</a> and navigate to the Profile Explorer. The profile now shows data sourced from both Salesforce and Snowflake, deduplicated into a single record.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SECTION 11 ═══════════════════════════════ -->
+<section class="section" id="deployment">
+  <div class="section-header">
+    <span class="section-icon">🚢</span>
+    <h2 class="section-title">Deployment</h2>
+  </div>
+
+  <h3>Environment Variables</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre class="language-bash"><code># .env.example — copy to .env and fill in values
+
+# Pega CDH connection
+PEGA_CDH_URL=http://localhost:3010        # Mock CDH for local dev
+PEGA_CDH_API_KEY=your-api-key-here
+
+# Kafka
+KAFKA_BROKERS=localhost:9092
+KAFKA_MOCK=true                           # Set false for real Kafka
+
+# Redis
+REDIS_URL=redis://localhost:6379
+
+# Services
+EVENT_COLLECTOR_PORT=3001
+PROFILE_ROUTER_PORT=3002
+FEEDBACK_LOOP_PORT=3003
+CONSENT_SERVICE_PORT=3004
+CONNECTOR_SERVICE_PORT=3005
+MOCK_CDH_PORT=3010
+DASHBOARD_PORT=3000
+
+# Demo mode
+MOCK_DATA=true                            # Uses mock connectors
+LOG_LEVEL=info                            # debug | info | warn | error</code></pre>
+  </div>
+
+  <h3>Deploy to Vercel (Demo/Staging)</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre class="language-bash"><code># Install Vercel CLI
+npm i -g vercel
+
+# Deploy dashboard
+cd dashboard
+vercel --prod
+
+# Deploy demo suite
+cd ../demo
+vercel --prod</code></pre>
+  </div>
+
+  <h3>Docker Compose Services</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre class="language-bash"><code># Start all services
+docker compose up -d
+
+# Start specific services
+docker compose up -d event-collector profile-router
+
+# View logs
+docker compose logs -f event-collector
+
+# Stop all
+docker compose down
+
+# Stop and remove volumes (fresh start)
+docker compose down -v</code></pre>
+  </div>
+
+  <h3>Health Checks</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre class="language-bash"><code># All services at once
+node scripts/health-check.js
+
+# Individual health endpoints
+curl http://localhost:3001/health
+curl http://localhost:3002/health
+curl http://localhost:3003/health
+curl http://localhost:3004/health
+curl http://localhost:3005/health</code></pre>
+  </div>
+
+  <div class="callout info">
+    <span class="callout-icon">ℹ️</span>
+    <div><strong>Production note:</strong> For a real Pega CDH deployment, set <code>PEGA_CDH_URL</code> to your Pega environment and <code>KAFKA_MOCK=false</code> with a real Kafka cluster (MSK, Confluent Cloud, or self-hosted). All other service configs remain the same.</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SECTION 12 ═══════════════════════════════ -->
+<section class="section" id="troubleshooting">
+  <div class="section-header">
+    <span class="section-icon">🔧</span>
+    <h2 class="section-title">Troubleshooting</h2>
+  </div>
+
+  <h3>Common Issues</h3>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num" style="background:var(--orange)">!</div><div class="recipe-title">Services won't start — Docker Desktop not running</div></div>
+    <div class="recipe-body">
+      <div class="callout warning">
+        <span class="callout-icon">⚠️</span>
+        <div><strong>Symptom:</strong> <code>docker compose up -d</code> fails with "Cannot connect to the Docker daemon"</div>
+      </div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code># macOS: Open Docker Desktop app, wait for whale icon to appear in menu bar
+open -a Docker
+# Wait ~30 seconds, then retry:
+docker compose up -d</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num" style="background:var(--orange)">!</div><div class="recipe-title">Port already in use</div></div>
+    <div class="recipe-body">
+      <div class="callout warning">
+        <span class="callout-icon">⚠️</span>
+        <div><strong>Symptom:</strong> <code>Error: listen EADDRINUSE :::3001</code></div>
+      </div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code># Find and kill what's using the port
+lsof -i :3001
+kill -9 &lt;PID&gt;
+
+# Or stop all CDH Bridge containers
+docker compose down</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num" style="background:var(--orange)">!</div><div class="recipe-title">Events not appearing in Pega CDH</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code># 1. Check Event Collector is healthy
+curl http://localhost:3001/health
+
+# 2. Check Mock CDH is healthy
+curl http://localhost:3010/health
+
+# 3. View Event Collector logs
+docker compose logs --tail=50 event-collector
+
+# 4. Check Kafka connectivity
+curl http://localhost:3001/v1/events/kafka-status</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num" style="background:var(--orange)">!</div><div class="recipe-title">Redis connection refused</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code># Check Redis container
+docker compose ps redis
+
+# Restart Redis
+docker compose restart redis
+
+# Test Redis directly
+docker compose exec redis redis-cli ping
+# Expected: PONG</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num" style="background:var(--orange)">!</div><div class="recipe-title">Profiles not merging / duplicate profiles</div></div>
+    <div class="recipe-body">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code># Check merge queue
+curl http://localhost:3002/v1/profiles/merge-queue
+
+# View merge logs
+docker compose logs --tail=100 profile-router | grep MERGE
+
+# Force a manual stitch
+curl -X POST http://localhost:3002/v1/profiles/stitch \
+  -H "Content-Type: application/json" \
+  -d '{"customerId":"CUST-001","email":"alice@bank.com"}'</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-header"><div class="recipe-num" style="background:var(--orange)">!</div><div class="recipe-title">Full reset (nuclear option)</div></div>
+    <div class="recipe-body">
+      <div class="callout warning">
+        <span class="callout-icon">⚠️</span>
+        <div>This wipes all data and containers. Only use when you need a completely fresh state.</div>
+      </div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre class="language-bash"><code>docker compose down -v          # stop + remove volumes
+docker compose up -d            # fresh start
+node scripts/seed-data.js       # re-seed demo data</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <h3>Getting Help</h3>
+  <div class="url-grid">
+    <a class="url-card" href="https://github.com/sunilmlodha/cdh-bridge/issues" target="_blank">
+      <span class="url-card-icon">🐛</span>
+      <div><div class="url-card-label">GitHub Issues</div><div class="url-card-url">github.com/sunilmlodha/cdh-bridge/issues</div></div>
+    </a>
+    <a class="url-card" href="https://github.com/sunilmlodha/cdh-bridge/discussions" target="_blank">
+      <span class="url-card-icon">💬</span>
+      <div><div class="url-card-label">Discussions</div><div class="url-card-url">github.com/sunilmlodha/cdh-bridge/discussions</div></div>
+    </a>
+    <a class="url-card" href="https://github.com/sunilmlodha/cdh-bridge/wiki" target="_blank">
+      <span class="url-card-icon">📚</span>
+      <div><div class="url-card-label">Wiki / Docs</div><div class="url-card-url">github.com/sunilmlodha/cdh-bridge/wiki</div></div>
+    </a>
+  </div>
+
+</section>
+
+</div><!-- /content-inner -->
+</main><!-- /main -->
+
+<!-- Back to top -->
+<button id="back-to-top" title="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+<script>
+// Copy button
+function copyCode(btn) {
+  const pre = btn.closest('.code-wrap').querySelector('pre');
+  const text = pre.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '✓ Copied';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('copied'); }, 1800);
+  });
+}
+
+// Back to top
+const btt = document.getElementById('back-to-top');
+window.addEventListener('scroll', () => {
+  btt.classList.toggle('visible', window.scrollY > 400);
+}, { passive: true });
+
+// Active nav link on scroll
+const sections = document.querySelectorAll('.section[id]');
+const navLinks = document.querySelectorAll('.nav-link');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(l => l.classList.remove('active'));
+      const active = document.querySelector(`.nav-link[href="#${entry.target.id}"]`);
+      if (active) active.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+
+sections.forEach(s => observer.observe(s));
+
+// Sidebar search filter
+document.getElementById('nav-search').addEventListener('input', function() {
+  const q = this.value.toLowerCase().trim();
+  navLinks.forEach(link => {
+    const text = link.textContent.toLowerCase();
+    link.classList.toggle('hidden', q.length > 0 && !text.includes(q));
+  });
+});
+</script>
+</body>
+</html>

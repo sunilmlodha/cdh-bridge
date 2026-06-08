@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CDH Bridge — Team Cookbook (Print Edition)</title>
+  <style>
+    /* ── Reset & base ─────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black:   #0a0a0a;
+      --gray700: #374151;
+      --gray500: #6b7280;
+      --gray200: #e5e7eb;
+      --gray100: #f3f4f6;
+      --accent:  #1d4ed8;
+      --code-bg: #f8fafc;
+      --border:  #d1d5db;
+    }
+
+    html { font-size: 14px; }
+
+    body {
+      font-family: 'Georgia', 'Times New Roman', serif;
+      color: var(--black);
+      background: #fff;
+      line-height: 1.7;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 2rem 2.5rem;
+    }
+
+    /* ── Cover ────────────────────────────────────────────── */
+    .cover {
+      text-align: center;
+      padding: 4rem 0 3rem;
+      border-bottom: 2px solid var(--black);
+      margin-bottom: 3rem;
+      page-break-after: always;
+    }
+
+    .cover .logo {
+      font-family: 'Arial', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+    }
+
+    .cover h1 {
+      font-family: 'Arial', sans-serif;
+      font-size: 2.6rem;
+      font-weight: 900;
+      line-height: 1.2;
+      margin-bottom: 0.75rem;
+    }
+
+    .cover .subtitle {
+      font-size: 1.1rem;
+      color: var(--gray500);
+      margin-bottom: 2rem;
+    }
+
+    .cover .meta {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.8rem;
+      color: var(--gray500);
+    }
+
+    /* ── Table of contents ────────────────────────────────── */
+    .toc {
+      page-break-after: always;
+      margin-bottom: 3rem;
+    }
+
+    .toc h2 {
+      font-family: 'Arial', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      border-bottom: 2px solid var(--black);
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .toc ol {
+      padding-left: 1.5rem;
+    }
+
+    .toc li {
+      margin-bottom: 0.4rem;
+      font-family: 'Arial', sans-serif;
+      font-size: 0.95rem;
+    }
+
+    .toc a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .toc a:hover { text-decoration: underline; }
+
+    .toc .toc-sub {
+      list-style: none;
+      padding-left: 1.5rem;
+      margin-top: 0.25rem;
+    }
+
+    .toc .toc-sub li {
+      font-size: 0.85rem;
+      color: var(--gray700);
+      margin-bottom: 0.2rem;
+    }
+
+    /* ── Sections ─────────────────────────────────────────── */
+    section {
+      page-break-before: always;
+      margin-bottom: 3rem;
+    }
+
+    section:first-of-type { page-break-before: avoid; }
+
+    /* ── Headings ─────────────────────────────────────────── */
+    h1, h2, h3, h4 {
+      font-family: 'Arial', sans-serif;
+      line-height: 1.3;
+    }
+
+    h2 {
+      font-size: 1.7rem;
+      font-weight: 800;
+      border-bottom: 3px solid var(--black);
+      padding-bottom: 0.4rem;
+      margin-bottom: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    h2:first-child { margin-top: 0; }
+
+    h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      color: var(--black);
+    }
+
+    h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: var(--gray700);
+    }
+
+    /* ── Paragraphs & lists ───────────────────────────────── */
+    p { margin-bottom: 0.9rem; }
+
+    ul, ol {
+      padding-left: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    li { margin-bottom: 0.3rem; }
+
+    /* ── Tables ───────────────────────────────────────────── */
+    .table-wrap {
+      overflow-x: auto;
+      margin: 1rem 0 1.5rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'Arial', sans-serif;
+      font-size: 0.82rem;
+    }
+
+    thead tr {
+      background: var(--black);
+      color: #fff;
+    }
+
+    thead th {
+      padding: 0.55rem 0.75rem;
+      text-align: left;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    tbody tr { border-bottom: 1px solid var(--border); }
+    tbody tr:nth-child(even) { background: var(--gray100); }
+
+    tbody td {
+      padding: 0.5rem 0.75rem;
+      vertical-align: top;
+    }
+
+    /* ── Code blocks ──────────────────────────────────────── */
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: 4px;
+      padding: 1rem 1rem 1rem 0;
+      margin: 1rem 0 1.5rem;
+      overflow-x: auto;
+      page-break-inside: avoid;
+      counter-reset: linecounter;
+      font-size: 0.78rem;
+      line-height: 1.6;
+    }
+
+    pre code {
+      font-family: 'Courier New', 'Consolas', monospace;
+      background: none;
+      border: none;
+      padding: 0;
+      display: block;
+    }
+
+    /* Line numbers */
+    pre code .line {
+      display: block;
+      padding-left: 3.5rem;
+      position: relative;
+    }
+
+    pre code .line::before {
+      counter-increment: linecounter;
+      content: counter(linecounter);
+      position: absolute;
+      left: 0;
+      width: 2.8rem;
+      text-align: right;
+      padding-right: 0.75rem;
+      color: var(--gray500);
+      user-select: none;
+      border-right: 1px solid var(--border);
+      font-size: 0.75rem;
+    }
+
+    /* Inline code */
+    code {
+      font-family: 'Courier New', 'Consolas', monospace;
+      background: var(--gray100);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 0.1em 0.35em;
+      font-size: 0.85em;
+    }
+
+    pre code { background: none; border: none; padding: 0; }
+
+    /* ── Callout / note blocks ────────────────────────────── */
+    .note {
+      background: #eff6ff;
+      border-left: 4px solid var(--accent);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+      border-radius: 0 4px 4px 0;
+    }
+
+    /* ── Divider ──────────────────────────────────────────── */
+    hr {
+      border: none;
+      border-top: 1px solid var(--gray200);
+      margin: 2rem 0;
+    }
+
+    /* ── Links ────────────────────────────────────────────── */
+    a { color: var(--accent); }
+
+    /* ── Footer (repeating via fixed positioning at print) ── */
+    .page-footer {
+      display: none; /* shown only in @media print via running element hack */
+    }
+
+    footer.screen-footer {
+      margin-top: 4rem;
+      padding-top: 1rem;
+      border-top: 2px solid var(--black);
+      font-family: 'Arial', sans-serif;
+      font-size: 0.78rem;
+      color: var(--gray500);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* ── Team Access table ────────────────────────────────── */
+    .team-access td:first-child { font-weight: 600; white-space: nowrap; }
+    .team-access td a { word-break: break-all; }
+
+    /* ── Print styles ─────────────────────────────────────── */
+    @media print {
+      html { font-size: 11pt; }
+
+      body {
+        max-width: 100%;
+        padding: 0;
+        margin: 0;
+      }
+
+      @page {
+        size: A4;
+        margin: 18mm 16mm 22mm 16mm;
+
+        @bottom-left {
+          content: "DCS — Confidential — DCS Team Use Only";
+          font-family: Arial, sans-serif;
+          font-size: 8pt;
+          color: #6b7280;
+        }
+
+        @bottom-center {
+          content: "CDH Bridge Team Cookbook v0.1.0";
+          font-family: Arial, sans-serif;
+          font-size: 8pt;
+          color: #6b7280;
+        }
+
+        @bottom-right {
+          content: "Page " counter(page) " of " counter(pages);
+          font-family: Arial, sans-serif;
+          font-size: 8pt;
+          color: #6b7280;
+        }
+      }
+
+      a { color: var(--black); }
+      a[href]::after {
+        content: " (" attr(href) ")";
+        font-size: 0.75em;
+        color: var(--gray500);
+      }
+
+      /* Suppress URL display for anchor (in-page) links */
+      a[href^="#"]::after { content: ""; }
+
+      section { page-break-before: always; }
+      .cover { page-break-after: always; }
+      .toc { page-break-after: always; }
+
+      h2, h3, h4 { page-break-after: avoid; }
+      pre, table { page-break-inside: avoid; }
+
+      thead { display: table-header-group; }
+
+      .screen-footer { display: none; }
+    }
+
+    @media screen {
+      body { padding: 2rem 2.5rem 4rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════ COVER -->
+  <div class="cover">
+    <div class="logo">DCS — Decision Consultant Solutions</div>
+    <h1>CDH Bridge<br>Team Cookbook</h1>
+    <p class="subtitle">DCS &times; Pega CDH &times; NexusCDP &mdash; Part 2: Identity, SDK &amp; Operations</p>
+    <p class="meta">
+      Version 0.1.0 &nbsp;|&nbsp; Confidential &mdash; DCS Team Use Only
+      <br>Repository: <a href="https://github.com/sunilmlodha/cdh-bridge">github.com/sunilmlodha/cdh-bridge</a>
+    </p>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ TOC -->
+  <nav class="toc" id="toc">
+    <h2>Table of Contents</h2>
+    <ol>
+      <li>
+        <a href="#s8">Section 8: Identity Resolution</a>
+        <ul class="toc-sub">
+          <li><a href="#s8-how">How identity matching works</a></li>
+          <li><a href="#s8-thresholds">Confidence thresholds</a></li>
+          <li><a href="#s8-recipes">Recipes 1–8 (stitch, device, cluster, review queue&hellip;)</a></li>
+        </ul>
+      </li>
+      <li>
+        <a href="#s9">Section 9: NexusJS SDK Integration</a>
+        <ul class="toc-sub">
+          <li><a href="#s9-web">Web &amp; Mobile installation</a></li>
+          <li><a href="#s9-methods">Method reference</a></li>
+          <li><a href="#s9-events">Events reference</a></li>
+          <li><a href="#s9-example">Complete integration example</a></li>
+        </ul>
+      </li>
+      <li>
+        <a href="#s10">Section 10: Demo Scenarios</a>
+        <ul class="toc-sub">
+          <li><a href="#s10-run">Running scenarios locally</a></li>
+          <li><a href="#s10-scenarios">6 Demo Scenarios Explained</a></li>
+        </ul>
+      </li>
+      <li>
+        <a href="#s11">Section 11: Deployment</a>
+        <ul class="toc-sub">
+          <li><a href="#s11-compare">Platform comparison</a></li>
+          <li><a href="#s11-make">One-command deploy reference</a></li>
+          <li><a href="#s11-env">Environment variables</a></li>
+          <li><a href="#s11-images">Docker images (GHCR)</a></li>
+        </ul>
+      </li>
+      <li>
+        <a href="#s12">Section 12: Troubleshooting</a>
+        <ul class="toc-sub">
+          <li><a href="#s12-start">Service won&rsquo;t start</a></li>
+          <li><a href="#s12-kafka">Kafka connection refused</a></li>
+          <li><a href="#s12-profile">Profile not found</a></li>
+          <li><a href="#s12-validation">400 VALIDATION_ERROR</a></li>
+          <li><a href="#s12-nba">NBA decisions empty</a></li>
+          <li><a href="#s12-consent">Consent propagation timeout</a></li>
+          <li><a href="#s12-dashboard">Dashboard offline</a></li>
+          <li><a href="#s12-reset">Resetting data for demo</a></li>
+        </ul>
+      </li>
+      <li><a href="#quickref">Quick Reference Card — All Endpoints</a></li>
+      <li><a href="#team">Team Access</a></li>
+    </ol>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════════ SECTION 8 -->
+  <section id="s8">
+    <h2>Section 8: Identity Resolution</h2>
+
+    <h3 id="s8-how">How identity matching works</h3>
+    <p>The CDH Bridge uses a 3-phase approach to resolve identities across channels:</p>
+    <ol>
+      <li><strong>Deterministic</strong> — email, phone, or CRM ID exact match → confidence <code>1.0</code>, profiles merged immediately</li>
+      <li><strong>Probabilistic</strong> — name + DOB + postcode fuzzy match → confidence <code>0.75–0.94</code> → routed to review queue for human approval</li>
+      <li><strong>Anonymous stitching</strong> — <code>cookieId</code> → <code>customerId</code> on login event, triggered by <code>NexusCDP.identify()</code></li>
+    </ol>
+
+    <h3 id="s8-thresholds">Confidence thresholds</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Score</th><th>Action</th><th>What happens</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>&ge; 0.95</td><td><code>AUTO_MERGE</code></td><td>Profiles merged immediately; CDH gets unified profile</td></tr>
+          <tr><td>0.75–0.94</td><td><code>REVIEW_QUEUED</code></td><td>Added to review queue for human approval</td></tr>
+          <tr><td>&lt; 0.75</td><td><code>CREATE_NEW</code></td><td>New profile created, no merge attempted</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="s8-recipes">Recipes</h3>
+
+    <h4>Recipe 1: Trigger anonymous-to-known stitch</h4>
+    <pre><code id="r1"></code></pre>
+
+    <h4>Recipe 2: Register a device</h4>
+    <pre><code id="r2"></code></pre>
+
+    <h4>Recipe 3: Get identity cluster (all linked identifiers)</h4>
+    <pre><code id="r3"></code></pre>
+    <p>Response shows: golden record, all email / phone / device / cookie aliases, merged IDs.</p>
+
+    <h4>Recipe 4: Check review queue</h4>
+    <pre><code id="r4"></code></pre>
+
+    <h4>Recipe 5: Approve a pending merge</h4>
+    <pre><code id="r5"></code></pre>
+
+    <h4>Recipe 6: Reject a pending merge</h4>
+    <pre><code id="r6"></code></pre>
+
+    <h4>Recipe 7: Resolve any identifier to golden ID</h4>
+    <pre><code id="r7"></code></pre>
+    <p>Works with email, phone, deviceId, cookieId, or customerId.</p>
+
+    <h4>Recipe 8: Get identity stats</h4>
+    <pre><code id="r8"></code></pre>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════ SECTION 9 -->
+  <section id="s9">
+    <h2>Section 9: NexusJS SDK Integration</h2>
+
+    <h3 id="s9-web">Web Installation</h3>
+    <pre><code id="sdk-web"></code></pre>
+
+    <h3>Mobile Installation</h3>
+    <pre><code id="sdk-mobile"></code></pre>
+
+    <h3 id="s9-methods">SDK Method Reference</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Method</th><th>Description</th><th>Example</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>init(options)</code></td><td>Initialise SDK</td><td><code>NexusCDP.init({ apiKey: 'pk_...' })</code></td></tr>
+          <tr><td><code>identify(id, traits, cb)</code></td><td>Identify customer + stitch anon</td><td><code>NexusCDP.identify('CUST-001', {name:'Alice'})</code></td></tr>
+          <tr><td><code>track(type, props, channel, cb)</code></td><td>Track an event</td><td><code>NexusCDP.track('product_view', {product:'loan'})</code></td></tr>
+          <tr><td><code>getNBA(cb)</code></td><td>Fetch NBA decisions</td><td><code>NexusCDP.getNBA((err, decisions) =&gt; {})</code></td></tr>
+          <tr><td><code>feedback(id, action, outcome, ch, cb)</code></td><td>Record NBA outcome</td><td><code>NexusCDP.feedback('d-1', 'Loan', 'ACCEPTED', 'web')</code></td></tr>
+          <tr><td><code>optOut(channels, cb)</code></td><td>Consent opt-out</td><td><code>NexusCDP.optOut(['email', 'sms'])</code></td></tr>
+          <tr><td><code>on(event, handler)</code></td><td>Listen to SDK events</td><td><code>NexusCDP.on('stitch:complete', fn)</code></td></tr>
+          <tr><td><code>getState()</code></td><td>Get current state</td><td><code>NexusCDP.getState()</code></td></tr>
+          <tr><td><code>reset()</code></td><td>Logout / clear identity</td><td><code>NexusCDP.reset()</code></td></tr>
+          <tr><td><code>biometricLogin(id, traits, cb)</code></td><td>Mobile biometric auth</td><td><code>NexusCDP.biometricLogin('CUST-001', {...})</code></td></tr>
+          <tr><td><code>trackAppOpen(meta)</code></td><td>Mobile app open</td><td><code>NexusCDP.trackAppOpen({platform:'ios'})</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="s9-events">SDK Events Reference</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Event</th><th>When fired</th><th>Data</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>init</code></td><td>SDK initialised</td><td><code>{cookieId, customerId}</code></td></tr>
+          <tr><td><code>identify</code></td><td>Identity set</td><td><code>{customerId, traits}</code></td></tr>
+          <tr><td><code>event:sent</code></td><td>Event dispatched</td><td><code>{payload}</code></td></tr>
+          <tr><td><code>event:accepted</code></td><td>Event confirmed by backend</td><td><code>{payload, response: {ihEventType, kafka: {offset}}}</code></td></tr>
+          <tr><td><code>event:error</code></td><td>Event failed</td><td><code>{payload, error}</code></td></tr>
+          <tr><td><code>stitch:complete</code></td><td>Anon&rarr;known stitch done</td><td><code>{cookieId, customerId}</code></td></tr>
+          <tr><td><code>nba:received</code></td><td>NBA decisions fetched</td><td><code>decisions[]</code></td></tr>
+          <tr><td><code>feedback:sent</code></td><td>NBA feedback recorded</td><td><code>{decisionId, outcome}</code></td></tr>
+          <tr><td><code>consent:optout</code></td><td>Opt-out propagated</td><td><code>{channels, response}</code></td></tr>
+          <tr><td><code>reset</code></td><td>Identity cleared</td><td><code>{}</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="s9-example">Complete integration example (bank homepage)</h3>
+    <pre><code id="sdk-example"></code></pre>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════ SECTION 10 -->
+  <section id="s10">
+    <h2>Section 10: Demo Scenarios</h2>
+
+    <h3 id="s10-run">Running scenarios locally</h3>
+    <pre><code id="demo-run"></code></pre>
+
+    <h3 id="s10-scenarios">6 Demo Scenarios Explained</h3>
+
+    <h4>Scenario 1: Anonymous Browse</h4>
+    <p><strong>What happens:</strong></p>
+    <ol>
+      <li>Visitor arrives with no login — SDK creates <code>cookieId</code> in localStorage</li>
+      <li><code>page_view</code> events fire with <code>cookieId</code> (no <code>customerId</code>)</li>
+      <li>CDH Bridge builds anonymous profile in Redis</li>
+      <li>Events published to Kafka as <code>anon:{cookieId}</code></li>
+      <li>Profile available: <code>GET /v1/identity/anon/{cookieId}</code></li>
+    </ol>
+    <p><strong>How to run:</strong></p>
+    <ul>
+      <li>Web: <a href="https://cdh-bridge-demos.vercel.app/web">https://cdh-bridge-demos.vercel.app/web</a> &rarr; click "&#9889; Scenarios" &rarr; Scenario 1</li>
+      <li>Mobile: <a href="https://cdh-bridge-demos.vercel.app/mobile">https://cdh-bridge-demos.vercel.app/mobile</a> &rarr; tap &#9889; FAB &rarr; Scenario 1</li>
+    </ul>
+
+    <h4>Scenario 2: Login &amp; Identity Stitch</h4>
+    <p><strong>What happens:</strong></p>
+    <ol>
+      <li>Customer logs in — <code>NexusCDP.identify('CUST-001', {...})</code> fires</li>
+      <li>Event-collector receives login event with BOTH <code>cookieId</code> AND <code>customerId</code></li>
+      <li><code>profile-router</code> <code>stitchToKnown()</code> merges anon profile into known profile</li>
+      <li>All pre-login events now attributed to CUST-001</li>
+      <li>CDH Bridge pushes enriched profile to Pega CDH immediately</li>
+    </ol>
+
+    <h4>Scenario 3: NBA Decision</h4>
+    <p><strong>What happens:</strong></p>
+    <ol>
+      <li><code>NexusCDP.getNBA()</code> calls Mock CDH: <code>GET /nba/decisions/{customerId}</code></li>
+      <li>Mock CDH returns 3 ranked decisions based on profile</li>
+      <li>Top offer displayed in app</li>
+      <li>Customer accepts &rarr; <code>NexusCDP.feedback()</code> records ACCEPTED outcome</li>
+      <li>Feedback Loop updates profile with decision context</li>
+      <li>CDH Adaptive Models get richer training signal</li>
+    </ol>
+
+    <h4>Scenario 4: Product Browse (Cross-Channel)</h4>
+    <p><strong>What happens:</strong></p>
+    <ol>
+      <li>Customer views mortgage product &rarr; <code>IH.ProductView</code> fires</li>
+      <li>Event enriches CDH Interaction History</li>
+      <li>Switch to mobile &rarr; same profile, accumulated browsing signals</li>
+      <li>Next NBA on any channel reflects mortgage interest</li>
+    </ol>
+
+    <h4>Scenario 5: Consent Opt-out</h4>
+    <p><strong>What happens:</strong></p>
+    <ol>
+      <li><code>NexusCDP.optOut(['email'])</code> fires</li>
+      <li>Consent service receives request</li>
+      <li>Pega CDH profile suppressed via API in &lt;500ms</li>
+      <li>Kafka <code>cdh-consent</code> topic fans out to all 12 connected systems</li>
+      <li>Immutable audit log created</li>
+    </ol>
+
+    <h4>Scenario 6: Full End-to-End (60 seconds)</h4>
+    <p>Combines all 5 scenarios in sequence with real timing. Run with:</p>
+    <pre><code id="demo-full"></code></pre>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════ SECTION 11 -->
+  <section id="s11">
+    <h2>Section 11: Deployment</h2>
+
+    <h3 id="s11-compare">Deployment Options Comparison</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Platform</th><th>Setup Time</th><th>Cost</th><th>Best For</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Local Docker</td><td>5 min</td><td>Free</td><td>Development</td></tr>
+          <tr><td>Railway</td><td>10 min</td><td>Free tier available</td><td>Quick demo / staging</td></tr>
+          <tr><td>Fly.io</td><td>15 min</td><td>Free tier (lhr region)</td><td>Europe-based (near Latvia)</td></tr>
+          <tr><td>AWS ECS</td><td>30 min</td><td>~$50/mo</td><td>Enterprise / production</td></tr>
+          <tr><td>Kubernetes</td><td>60 min</td><td>Varies</td><td>Large scale</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="s11-make">One-command deploy reference</h3>
+    <pre><code id="deploy-make"></code></pre>
+
+    <h3 id="s11-env">Environment variables reference</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Variable</th><th>Default</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>REDIS_URL</code></td><td><code>redis://redis:6379</code></td><td>Redis connection string</td></tr>
+          <tr><td><code>KAFKA_BROKERS</code></td><td><code>kafka:9092</code></td><td>Kafka broker(s)</td></tr>
+          <tr><td><code>PEGA_CDH_URL</code></td><td><code>http://mock-cdh:3010</code></td><td>Pega CDH endpoint</td></tr>
+          <tr><td><code>PEGA_CDH_AUTH_TOKEN</code></td><td><code>dev-token</code></td><td>CDH auth token</td></tr>
+          <tr><td><code>JWT_SECRET</code></td><td><code>dev-secret</code></td><td>JWT signing secret</td></tr>
+          <tr><td><code>NODE_ENV</code></td><td><code>development</code></td><td>Environment</td></tr>
+          <tr><td><code>LOG_LEVEL</code></td><td><code>info</code></td><td>Log verbosity</td></tr>
+          <tr><td><code>MOCK_DATA</code></td><td><code>true</code></td><td>Use mock Salesforce data</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="s11-images">Docker images (GHCR)</h3>
+    <p>All images are built by GitHub Actions on every push to <code>main</code>:</p>
+    <pre><code id="deploy-images"></code></pre>
+    <p>Pull latest: <code>make pull</code></p>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════ SECTION 12 -->
+  <section id="s12">
+    <h2>Section 12: Troubleshooting</h2>
+
+    <h3 id="s12-start">Service won't start</h3>
+    <pre><code id="ts-start"></code></pre>
+
+    <h3 id="s12-kafka">"Kafka connection refused" errors</h3>
+    <p>Services retry Kafka connections automatically. If Kafka is still starting, wait 30 seconds and the services will reconnect.</p>
+    <pre><code id="ts-kafka"></code></pre>
+
+    <h3 id="s12-profile">Profile not found after posting</h3>
+    <p>The profile might be in the review queue (probabilistic match &ge;0.75). Check:</p>
+    <pre><code id="ts-profile"></code></pre>
+
+    <h3 id="s12-validation">Event returning 400 VALIDATION_ERROR</h3>
+    <p>Common causes:</p>
+    <ul>
+      <li>Missing both <code>customerId</code> AND <code>cookieId</code> (need at least one)</li>
+      <li><code>channel</code> value not in allowed list: <code>web</code>, <code>mobile</code>, <code>email</code>, <code>sms</code>, <code>call_center</code>, <code>chat</code>, <code>app</code>, <code>api</code>, <code>other</code></li>
+      <li><code>eventType</code> empty or too long (max 100 chars)</li>
+    </ul>
+
+    <h3 id="s12-nba">NBA decisions returning empty</h3>
+    <p>Mock CDH returns decisions based on profile existing. First POST the customer profile, then fetch decisions:</p>
+    <pre><code id="ts-nba"></code></pre>
+
+    <h3 id="s12-consent">Consent propagation timeout</h3>
+    <p>The consent service requires Redis. Check Redis is healthy:</p>
+    <pre><code id="ts-consent"></code></pre>
+
+    <h3 id="s12-dashboard">Dashboard shows all services as offline</h3>
+    <p>The Next.js dashboard proxies API calls. If running locally without Docker, services won't be available. Use <code>docker compose up -d</code> first.</p>
+
+    <h3 id="s12-reset">Resetting all data for a fresh demo</h3>
+    <pre><code id="ts-reset"></code></pre>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════ QUICK REF -->
+  <section id="quickref">
+    <h2>Quick Reference Card — All Endpoints</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>POST</td><td><code>:3001/v1/events</code></td><td>Ingest event</td></tr>
+          <tr><td>POST</td><td><code>:3001/v1/events/batch</code></td><td>Batch ingest</td></tr>
+          <tr><td>GET</td><td><code>:3001/v1/events/schema</code></td><td>IH schema reference</td></tr>
+          <tr><td>GET</td><td><code>:3001/health</code></td><td>Event collector health</td></tr>
+          <tr><td>POST</td><td><code>:3002/v1/profiles</code></td><td>Create / upsert profile</td></tr>
+          <tr><td>GET</td><td><code>:3002/v1/profiles/:id</code></td><td>Get profile</td></tr>
+          <tr><td>POST</td><td><code>:3002/v1/profiles/:id/merge</code></td><td>Merge data into profile</td></tr>
+          <tr><td>DELETE</td><td><code>:3002/v1/profiles/:id</code></td><td>Delete (GDPR)</td></tr>
+          <tr><td>GET</td><td><code>:3002/v1/profiles/stats</code></td><td>Profile statistics</td></tr>
+          <tr><td>POST</td><td><code>:3002/v1/identity/stitch</code></td><td>Stitch anon&rarr;known</td></tr>
+          <tr><td>GET</td><td><code>:3002/v1/identity/cluster/:id</code></td><td>Identity graph</td></tr>
+          <tr><td>GET</td><td><code>:3002/v1/identity/review/queue</code></td><td>Pending merges</td></tr>
+          <tr><td>POST</td><td><code>:3002/v1/identity/review/:id/approve</code></td><td>Approve merge</td></tr>
+          <tr><td>POST</td><td><code>:3003/v1/feedback</code></td><td>Record NBA outcome</td></tr>
+          <tr><td>GET</td><td><code>:3003/v1/feedback/:customerId</code></td><td>Decision history</td></tr>
+          <tr><td>GET</td><td><code>:3003/v1/feedback/lift</code></td><td>NBA lift stats</td></tr>
+          <tr><td>POST</td><td><code>:3004/v1/consent/optout</code></td><td>Marketing opt-out</td></tr>
+          <tr><td>POST</td><td><code>:3004/v1/consent/gdpr-erasure</code></td><td>GDPR erasure</td></tr>
+          <tr><td>GET</td><td><code>:3004/v1/consent/:id</code></td><td>Consent status</td></tr>
+          <tr><td>GET</td><td><code>:3004/v1/consent/requests</code></td><td>Pending requests</td></tr>
+          <tr><td>GET</td><td><code>:3005/v1/connectors</code></td><td>List connectors</td></tr>
+          <tr><td>POST</td><td><code>:3005/v1/connectors</code></td><td>Add connector</td></tr>
+          <tr><td>POST</td><td><code>:3005/v1/connectors/:id/test</code></td><td>Test connection</td></tr>
+          <tr><td>GET</td><td><code>:3010/nba/decisions/:id</code></td><td>Get NBA decisions</td></tr>
+          <tr><td>POST</td><td><code>:3010/customerprofile</code></td><td>Push profile to CDH</td></tr>
+          <tr><td>GET</td><td><code>:3010/health</code></td><td>Mock CDH health</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════ TEAM ACCESS -->
+  <section id="team">
+    <h2>Team Access</h2>
+    <div class="table-wrap">
+      <table class="team-access">
+        <thead>
+          <tr><th>Resource</th><th>URL / Details</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>GitHub repo</td><td><a href="https://github.com/sunilmlodha/cdh-bridge">https://github.com/sunilmlodha/cdh-bridge</a></td></tr>
+          <tr><td>Dashboard (live)</td><td><a href="https://cdh-bridge-dashboard.vercel.app">https://cdh-bridge-dashboard.vercel.app</a></td></tr>
+          <tr><td>Demo Suite</td><td><a href="https://cdh-bridge-demos.vercel.app">https://cdh-bridge-demos.vercel.app</a></td></tr>
+          <tr><td>Citadele Demo</td><td><a href="https://cdh-bridge-demos.vercel.app/citadele">https://cdh-bridge-demos.vercel.app/citadele</a></td></tr>
+          <tr><td>DemoBank Web</td><td><a href="https://cdh-bridge-demos.vercel.app/web">https://cdh-bridge-demos.vercel.app/web</a></td></tr>
+          <tr><td>DemoBank Mobile</td><td><a href="https://cdh-bridge-demos.vercel.app/mobile">https://cdh-bridge-demos.vercel.app/mobile</a></td></tr>
+          <tr><td>Cookbook</td><td><a href="https://cdh-bridge-demos.vercel.app/cookbook">https://cdh-bridge-demos.vercel.app/cookbook</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Team member access: @NanjundanChinnasamy has been granted Write access to the GitHub repo.</p>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════ SCREEN FOOTER -->
+  <footer class="screen-footer">
+    <span>DCS &mdash; Confidential &mdash; DCS Team Use Only</span>
+    <span>CDH Bridge v0.1.0</span>
+    <span><a href="https://github.com/sunilmlodha/cdh-bridge">github.com/sunilmlodha/cdh-bridge</a></span>
+  </footer>
+
+  <!-- ═══════════════════════════════════════════════════════ CODE CONTENT -->
+  <!--
+    We inject code blocks via JS so that HTML entities are not needed inside
+    the <pre><code> blocks and line-number spans can be generated cleanly.
+  -->
+  <script>
+    function renderCode(id, raw) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var lines = raw.split('\n');
+      // Remove leading/trailing blank lines
+      while (lines.length && lines[0].trim() === '') lines.shift();
+      while (lines.length && lines[lines.length - 1].trim() === '') lines.pop();
+      el.innerHTML = lines.map(function(l) {
+        return '<span class="line">' + escHtml(l) + '</span>';
+      }).join('\n');
+    }
+
+    function escHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    // ── Section 8 recipes ──────────────────────────────────────────────
+    renderCode('r1',
+`curl -X POST http://localhost:3002/v1/identity/stitch \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "cookieId": "ck-abc123",
+    "customerId": "CUST-001",
+    "source": "login-event"
+  }'`);
+
+    renderCode('r2',
+`curl -X POST http://localhost:3002/v1/identity/device/register \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "customerId": "CUST-001",
+    "deviceId": "iphone-abc123",
+    "deviceType": "ios",
+    "metadata": { "appVersion": "4.2.0" }
+  }'`);
+
+    renderCode('r3',
+`curl http://localhost:3002/v1/identity/cluster/CUST-001`);
+
+    renderCode('r4',
+`curl http://localhost:3002/v1/identity/review/queue`);
+
+    renderCode('r5',
+`curl -X POST http://localhost:3002/v1/identity/review/{reviewId}/approve \\
+  -H "Content-Type: application/json" \\
+  -d '{ "resolvedBy": "alice@wearedcs.com" }'`);
+
+    renderCode('r6',
+`curl -X POST http://localhost:3002/v1/identity/review/{reviewId}/reject \\
+  -H "Content-Type: application/json" \\
+  -d '{ "resolvedBy": "alice@wearedcs.com" }'`);
+
+    renderCode('r7',
+`# Works with email, phone, deviceId, cookieId, or customerId
+curl http://localhost:3002/v1/identity/cluster/alice@bank.com
+curl http://localhost:3002/v1/identity/cluster/ck-abc123`);
+
+    renderCode('r8',
+`curl http://localhost:3002/v1/identity/stats`);
+
+    // ── Section 9 SDK ──────────────────────────────────────────────────
+    renderCode('sdk-web',
+`<!-- 1. Load SDK -->
+<script src="https://cdh-bridge-demos.vercel.app/sdk/nexus.js"><\/script>
+
+<!-- 2. Initialise (use Railway URL when backend is deployed) -->
+<script>
+NexusCDP.init({
+  apiKey: 'pk_your_key',
+  collectorUrl: 'http://localhost:3001',  // or Railway URL
+  profileUrl:   'http://localhost:3002',
+  cdhUrl:       'http://localhost:3010',
+  feedbackUrl:  'http://localhost:3003',
+  consentUrl:   'http://localhost:3004',
+  debug: true   // set false in production
+});
+<\/script>`);
+
+    renderCode('sdk-mobile',
+`<script src="https://cdh-bridge-demos.vercel.app/sdk/nexus-mobile.js"><\/script>
+<script>
+NexusCDP.init({ apiKey: 'pk_your_key', /* same options */ });
+NexusCDP.trackAppOpen({ platform: 'mobile', appVersion: '4.2.0' });
+<\/script>`);
+
+    renderCode('sdk-example',
+`<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdh-bridge-demos.vercel.app/sdk/nexus.js"><\/script>
+  <script>
+    // 1. Initialise on page load
+    NexusCDP.init({ apiKey: 'pk_demo', debug: true });
+
+    // 2. Listen to events for your own logging
+    NexusCDP.on('event:accepted', function(d) {
+      console.log('CDH IH type:', d.response.ihEventType);
+    });
+
+    NexusCDP.on('stitch:complete', function(d) {
+      console.log('Identity stitched:', d.customerId);
+      // Now get NBA for this customer
+      NexusCDP.getNBA(showOffer);
+    });
+  <\/script>
+</head>
+<body>
+  <button onclick="login()">Sign In</button>
+  <div id="offer" style="display:none"></div>
+
+  <script>
+    function login() {
+      // Triggers identity stitch (cookieId already set by SDK)
+      NexusCDP.identify('CUST-001', { name: 'Alice Smith', tier: 'premium' });
+    }
+
+    function showOffer(err, decisions) {
+      if (err || !decisions.length) return;
+      var offer = decisions[0];
+      document.getElementById('offer').innerHTML =
+        '<h3>' + offer.action + '</h3><p>Propensity: ' + offer.propensity + '</p>' +
+        '<button onclick="accept()">Accept</button>';
+      document.getElementById('offer').style.display = 'block';
+    }
+
+    function accept() {
+      NexusCDP.track('offer_accept', { offer: 'HomeLoan' });
+      NexusCDP.feedback(currentDecisionId, 'HomeLoan', 'ACCEPTED', 'web');
+    }
+  <\/script>
+</body>
+</html>`);
+
+    // ── Section 10 demo ────────────────────────────────────────────────
+    renderCode('demo-run',
+`# Full 60-second automated demo
+node scripts/demo.js
+
+# Identity resolution demo
+node scripts/demo-identity.js
+
+# Seed fresh data before demoing
+node scripts/seed-data.js`);
+
+    renderCode('demo-full',
+`node scripts/demo.js`);
+
+    // ── Section 11 deploy ──────────────────────────────────────────────
+    renderCode('deploy-make',
+`make dev            # Local Docker Compose
+make deploy-vercel  # Dashboard + Demo sites
+make deploy-railway # Backend to Railway
+make deploy-fly     # Backend to Fly.io
+make deploy-aws     # Backend to AWS ECS Fargate
+make deploy-k8s     # Backend to Kubernetes`);
+
+    renderCode('deploy-images',
+`ghcr.io/sunilmlodha/cdh-bridge-event-collector:latest
+ghcr.io/sunilmlodha/cdh-bridge-profile-router:latest
+ghcr.io/sunilmlodha/cdh-bridge-feedback-loop:latest
+ghcr.io/sunilmlodha/cdh-bridge-consent-service:latest
+ghcr.io/sunilmlodha/cdh-bridge-connector-service:latest
+ghcr.io/sunilmlodha/cdh-bridge-mock-cdh:latest
+ghcr.io/sunilmlodha/cdh-bridge-dashboard:latest`);
+
+    // ── Section 12 troubleshooting ─────────────────────────────────────
+    renderCode('ts-start',
+`# Check logs for specific service
+docker compose logs event-collector --tail=50
+
+# Check all service health
+node scripts/health-check.js
+
+# Restart a specific service
+docker compose restart event-collector
+
+# Full restart
+make down && make dev`);
+
+    renderCode('ts-kafka',
+`docker compose logs kafka --tail=20`);
+
+    renderCode('ts-profile',
+`curl http://localhost:3002/v1/identity/review/queue`);
+
+    renderCode('ts-nba',
+`# 1. Create the profile first
+curl -X POST http://localhost:3010/customerprofile \\
+  -H "Content-Type: application/json" \\
+  -d '{"customerId":"CUST-001","email":"test@test.com"}'
+
+# 2. Then fetch decisions
+curl http://localhost:3010/nba/decisions/CUST-001`);
+
+    renderCode('ts-consent',
+`docker exec cdh-redis redis-cli ping
+# Should return: PONG`);
+
+    renderCode('ts-reset',
+`# Stop everything and wipe volumes
+make down-volumes
+
+# Restart fresh
+make dev
+
+# Wait for healthy, then reseed
+sleep 30 && node scripts/seed-data.js`);
+  </script>
+</body>
+</html>
