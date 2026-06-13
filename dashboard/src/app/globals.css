@@ -2,46 +2,193 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* ── Fonts ────────────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500&family=Hanken+Grotesk:wght@300;400;500;600;700&display=swap');
 
+/* ── Design tokens: Default theme ─────────────────────────────────────────── */
+:root {
+  --font-heading: 'Inter', system-ui, sans-serif;
+  --font-body:    'Inter', system-ui, sans-serif;
+
+  --bg:           #f8fafc;
+  --bg-sidebar:   #003A61;
+  --bg-card:      #ffffff;
+  --bg-card-alt:  #f1f5f9;
+
+  --text:         #0f172a;
+  --text-muted:   #64748b;
+  --text-sidebar: rgba(255,255,255,0.8);
+  --text-sidebar-muted: rgba(147,197,253,1);
+
+  --border:       #e2e8f0;
+  --border-focus: #0063AB;
+
+  --btn-bg:       #0063AB;
+  --btn-text:     #ffffff;
+  --btn-hover:    #003A61;
+
+  --nav-active-bg:   rgba(255,255,255,0.2);
+  --nav-active-text: #ffffff;
+  --nav-hover-bg:    rgba(255,255,255,0.1);
+
+  --accent-1: #6366f1;
+  --accent-2: #0063AB;
+  --accent-3: #16a34a;
+  --accent-4: #d97706;
+
+  --radius-card: 0.75rem;  /* 12px */
+  --radius-btn:  0.5rem;   /* 8px */
+  --radius-sm:   0.375rem; /* 6px */
+
+  --logo-bg:     #0063AB;
+  --logo-text:   #ffffff;
+}
+
+/* ── Design tokens: DCS Editorial theme ───────────────────────────────────── */
+[data-theme="editorial"] {
+  --font-heading: 'Newsreader', Georgia, serif;
+  --font-body:    'Hanken Grotesk', system-ui, sans-serif;
+
+  --bg:           #FAF9F7;
+  --bg-sidebar:   #1B1B1A;
+  --bg-card:      #FBF9F5;
+  --bg-card-alt:  #F3F1EC;
+
+  --text:         #1B1B1A;
+  --text-muted:   #6B6860;
+  --text-sidebar: rgba(250,249,247,0.9);
+  --text-sidebar-muted: rgba(250,249,247,0.5);
+
+  --border:       #E5E2DA;
+  --border-focus: #1B1B1A;
+
+  --btn-bg:       #1B1B1A;
+  --btn-text:     #FAF9F7;
+  --btn-hover:    #3A3A38;
+
+  --nav-active-bg:   #FAF9F7;
+  --nav-active-text: #1B1B1A;
+  --nav-hover-bg:    rgba(250,249,247,0.08);
+
+  /* DCS dot palette — earthy red, amber, green, slate blue */
+  --accent-1: #C0392B;
+  --accent-2: #D4872A;
+  --accent-3: #4A7C59;
+  --accent-4: #3D6B8E;
+
+  --radius-card: 0.5rem;   /* 8px — tighter */
+  --radius-btn:  0.5rem;   /* 8px */
+  --radius-sm:   0.25rem;  /* 4px */
+
+  --logo-bg:     #FAF9F7;
+  --logo-text:   #1B1B1A;
+}
+
+/* ── Apply tokens ─────────────────────────────────────────────────────────── */
 html {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-body);
+  background-color: var(--bg);
+  color: var(--text);
+  transition: background-color 0.25s ease, color 0.2s ease;
 }
 
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+[data-theme="editorial"] h1,
+[data-theme="editorial"] h2,
+[data-theme="editorial"] h3 {
+  letter-spacing: -0.02em;
+}
+
+/* ── Component classes ────────────────────────────────────────────────────── */
 .sidebar-link {
-  @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 text-blue-100 hover:bg-white/10 hover:text-white;
+  @apply flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all duration-150;
+  border-radius: var(--radius-sm);
+  color: var(--text-sidebar);
 }
-
+.sidebar-link:hover {
+  background: var(--nav-hover-bg);
+  color: var(--text-sidebar);
+  filter: brightness(1.2);
+}
 .sidebar-link.active {
-  @apply bg-white/20 text-white;
+  background: var(--nav-active-bg);
+  color: var(--nav-active-text);
 }
 
 .card {
-  @apply bg-white rounded-xl shadow-sm border border-gray-100 p-6;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  @apply shadow-sm p-6;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .btn-primary {
-  @apply bg-pega-blue text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-pega-dark transition-colors duration-150;
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border-radius: var(--radius-btn);
+  @apply px-4 py-2 text-sm font-medium transition-colors duration-150;
+}
+.btn-primary:hover {
+  background: var(--btn-hover);
 }
 
 .btn-secondary {
-  @apply bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors duration-150;
+  background: var(--bg-card-alt);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-btn);
+  @apply px-4 py-2 text-sm font-medium transition-colors duration-150;
+}
+.btn-secondary:hover {
+  filter: brightness(0.96);
 }
 
+/* ── KPI / stat numbers in editorial use Newsreader ─────────────────────── */
+[data-theme="editorial"] .stat-value {
+  font-family: var(--font-heading);
+  font-style: italic;
+}
+
+/* ── Theme toggle button ─────────────────────────────────────────────────── */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-btn);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.theme-toggle:hover {
+  border-color: var(--btn-bg);
+  color: var(--text);
+}
+
+/* ── Animations ──────────────────────────────────────────────────────────── */
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  50%       { opacity: 0.4; }
 }
-
-.pulse-dot {
-  animation: pulse-dot 2s ease-in-out infinite;
-}
+.pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
 
 @keyframes scroll-up {
   from { transform: translateY(0); }
-  to { transform: translateY(-100%); }
+  to   { transform: translateY(-50%); }
 }
 
-.live-feed-row {
-  @apply border-b border-gray-50 py-2 px-1 text-xs text-gray-600 hover:bg-gray-50 transition-colors;
-}
+/* ── Scrollbar ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
